@@ -13,9 +13,9 @@ namespace Sentinel.Plugin.SingleFile
     {
         private readonly ILogger? _logger;
         //public SingleFile() { }
-        public SingleFile(ILoggerFactory loggerFactory)
+        public SingleFile(ILogger<SingleFile> logger)
         {
-            _logger = loggerFactory.CreateLogger<SingleFile>();
+            _logger = logger;
         }
 
         public string Name => "SingleFile";
