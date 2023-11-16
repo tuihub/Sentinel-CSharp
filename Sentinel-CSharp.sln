@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sentinel", "Sentinel\Sentin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sentinel.Plugin", "Sentinel.Plugin\Sentinel.Plugin.csproj", "{AA89FA63-6F3A-4DD4-BD4A-4DC5A752A794}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sentinel.Plugin.SingleFile", "Sentinel.Plugin.SingleFile\Sentinel.Plugin.SingleFile.csproj", "{18358106-B045-4FD8-B7A0-3A0DD9C3E521}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{AA89FA63-6F3A-4DD4-BD4A-4DC5A752A794}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AA89FA63-6F3A-4DD4-BD4A-4DC5A752A794}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AA89FA63-6F3A-4DD4-BD4A-4DC5A752A794}.Release|Any CPU.Build.0 = Release|Any CPU
+		{18358106-B045-4FD8-B7A0-3A0DD9C3E521}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18358106-B045-4FD8-B7A0-3A0DD9C3E521}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18358106-B045-4FD8-B7A0-3A0DD9C3E521}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18358106-B045-4FD8-B7A0-3A0DD9C3E521}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
