@@ -1,11 +1,11 @@
-﻿using Sentinel.Models;
+﻿using Sentinel.Plugin.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Sentinel.Contracts
+namespace Sentinel.Plugin.Contracts
 {
     public interface IPlugin
     {
