@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using CommandLine;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Sentinel.Plugin.Contracts;
 using System.Reflection;
 using System.Windows.Input;
@@ -9,53 +11,67 @@ namespace Sentinel
     {
         private static ILoggerFactory _loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         private static ILogger _logger;
+        private static IServiceProvider _serviceProvider;
+
+        private static IList<Type> _pluginTypeList = new List<Type>();
 
         static void Main(string[] args)
         {
-            _logger = _loggerFactory.CreateLogger("Program");
+            _logger = _loggerFactory.CreateLogger<Program>();
 
-            LoadPlugins();
+            var services = new ServiceCollection();
+            services.AddLogging(builder => builder.AddConsole());
+
+            LoadPlugins(services);
+
+            _serviceProvider = services.BuildServiceProvider();
+
+            var logger2 = _serviceProvider.GetRequiredService<ILogger<Program>>();
+
+            var plugins = _serviceProvider.GetServices<IPlugin>();
+            var options = plugins.Select(p => p.CommandLineOptions).ToArray();
+            var optionTypes = options.Select(o => o.GetType()).ToArray();
+
+            Parser.Default.ParseArguments(args, optionTypes)
+                          .WithParsed(Run);
         }
 
-        private static void LoadPlugins()
+        private static void Run(object obj)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void LoadPlugins(ServiceCollection services)
         {
             string[] pluginPaths = new[]
             {
                 "./plugins/Sentinel.Plugin.SingleFile/Sentinel.Plugin.SingleFile.dll"
             };
 
-            List<IPlugin> plugins = new();
             foreach (var path in pluginPaths)
             {
                 Assembly pluginAssembly = LoadPlugin(path);
-                plugins.AddRange(GetIPlugins(pluginAssembly));
+                GetIPlugins(pluginAssembly, services);
             }
         }
 
-        private static IEnumerable<IPlugin> GetIPlugins(Assembly assembly)
+        private static void GetIPlugins(Assembly assembly, ServiceCollection services)
         {
-            int count = 0;
-
             foreach (Type type in assembly.GetTypes())
             {
                 if (typeof(IPlugin).IsAssignableFrom(type))
                 {
-                    var instance = Activator.CreateInstance(type, new object[] { _loggerFactory });
-                    IPlugin? result = instance as IPlugin;
-                    if (result != null)
+                    try
                     {
-                        count++;
-                        yield return result;
+                        services.AddSingleton(typeof(IPlugin), type);
+                        _pluginTypeList.Add(type);
+                        _logger.LogInformation($"Loaded IPlugin {type} from {assembly.FullName}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"Failed to load plugin: {type.FullName}");
                     }
                 }
-            }
-
-            if (count == 0)
-            {
-                string availableTypes = string.Join(",", assembly.GetTypes().Select(t => t.FullName));
-                throw new ApplicationException(
-                    $"Can't find any type which implements ICommand in {assembly} from {assembly.Location}.\n" +
-                    $"Available types: {availableTypes}");
             }
         }
 

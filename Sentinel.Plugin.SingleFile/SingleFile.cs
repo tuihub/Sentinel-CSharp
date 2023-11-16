@@ -11,10 +11,11 @@ namespace Sentinel.Plugin.SingleFile
 {
     public class SingleFile : IPlugin
     {
-        public readonly ILogger? _logger;
-        public SingleFile(LoggerFactory factory)
+        private readonly ILogger? _logger;
+        //public SingleFile() { }
+        public SingleFile(ILoggerFactory loggerFactory)
         {
-            _logger = factory?.CreateLogger<SingleFile>();
+            _logger = loggerFactory.CreateLogger<SingleFile>();
         }
 
         public string Name => "SingleFile";
@@ -23,6 +24,7 @@ namespace Sentinel.Plugin.SingleFile
 
         public IEnumerable<Entry> GetEntries()
         {
+            _logger?.LogInformation("Adding entry.");
             return new List<Entry>
             {
                 new Entry
