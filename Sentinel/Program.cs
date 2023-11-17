@@ -10,6 +10,8 @@ namespace Sentinel
 {
     internal class Program
     {
+        private static readonly string _pluginBaseDir = "./plugins";
+
         private static ILoggerFactory _loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         private static ILogger _logger;
         private static IServiceCollection _services;
@@ -60,12 +62,27 @@ namespace Sentinel
 
         private static void LoadPlugins()
         {
-            string[] pluginPaths = new[]
+            var pluginPathList = new List<string>();
+            _logger.LogInformation($"Searching dlls from: {_pluginBaseDir}");
+            foreach (var filePath in Directory.EnumerateFiles(_pluginBaseDir, "*.dll", SearchOption.TopDirectoryOnly))
             {
-                "./plugins/Sentinel.Plugin.SingleFile/Sentinel.Plugin.SingleFile.dll"
-            };
+                pluginPathList.Add(filePath);
+                _logger.LogInformation($"Added dll: {filePath}");
+            }
+            _logger.LogInformation($"Searching level 1 subdirectories from: {_pluginBaseDir}");
+            var l1SubDirs = Directory.EnumerateDirectories(_pluginBaseDir, "*", SearchOption.TopDirectoryOnly);
+            foreach (var dir in l1SubDirs)
+            {
+                var dirName = new DirectoryInfo(dir).Name;
+                string filePath = Path.Combine(dir, dirName + ".dll");
+                if (File.Exists(filePath))
+                {
+                    pluginPathList.Add(filePath);
+                    _logger.LogInformation($"Added dll: {filePath}");
+                }
+            }
 
-            foreach (var path in pluginPaths)
+            foreach (var path in pluginPathList)
             {
                 Assembly pluginAssembly = LoadPlugin(path);
                 GetIPlugins(pluginAssembly);
