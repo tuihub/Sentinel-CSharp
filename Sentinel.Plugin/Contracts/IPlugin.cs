@@ -13,6 +13,6 @@ namespace Sentinel.Plugin.Contracts
         string Description { get; }
         object CommandLineOptions { get; }
 
-        IEnumerable<Entry> GetEntries();
+        IEnumerable<Entry> GetEntries(object options);
     }
 }

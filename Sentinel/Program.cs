@@ -45,18 +45,26 @@ namespace Sentinel
                 _logger.LogError($"Failed to find plugin for CommandLineOptions type {obj.GetType().FullName}");
                 Environment.Exit(1);
             }
-            OptionsBase options = (OptionsBase)obj;
-            var entries = plugin.GetEntries();
-            if (options.PrintToConsole == true)
+            try
             {
-                foreach (var entry in entries)
+                OptionsBase options = (OptionsBase)obj;
+                var entries = plugin.GetEntries(obj);
+                if (options.PrintToConsole == true)
                 {
-                    Console.WriteLine(entry);
+                    foreach (var entry in entries)
+                    {
+                        Console.WriteLine(entry);
+                    }
+                }
+                else
+                {
+                    throw new NotImplementedException();
                 }
             }
-            else
+            catch (Exception ex)
             {
-                throw new NotImplementedException();
+                _logger.LogError(ex, $"Failed to run plugin {plugin.Name}");
+                Environment.Exit(1);
             }
         }
 
