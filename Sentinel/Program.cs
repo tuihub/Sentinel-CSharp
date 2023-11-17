@@ -1,6 +1,7 @@
 ﻿using CommandLine;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using Sentinel.Plugin.Contracts;
 using Sentinel.Plugin.Models;
 using System.Reflection;
@@ -12,7 +13,12 @@ namespace Sentinel
     {
         private static readonly string _pluginBaseDir = "./plugins";
 
-        private static ILoggerFactory _loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+        private static ILoggerFactory _loggerFactory = LoggerFactory.Create(builder => builder.AddSimpleConsole(o =>
+        {
+            o.IncludeScopes = true;
+            o.SingleLine = true;
+            o.TimestampFormat = "yyyy-MM-dd HH:mm:sszzz ";
+        }));
         private static ILogger _logger;
         private static IServiceCollection _services;
         private static IServiceProvider _serviceProvider;
@@ -25,7 +31,12 @@ namespace Sentinel
             _logger = _loggerFactory.CreateLogger<Program>();
             // add services for DI
             _services = new ServiceCollection();
-            _services.AddLogging(builder => builder.AddConsole());
+            _services.AddLogging(builder => builder.AddSimpleConsole(o =>
+            {
+                o.IncludeScopes = true;
+                o.SingleLine = true;
+                o.TimestampFormat = "yyyy-MM-dd HH:mm:sszzz ";
+            }));
             LoadPlugins();
             _serviceProvider = _services.BuildServiceProvider();
             // get CommandLineOptions from plugins
