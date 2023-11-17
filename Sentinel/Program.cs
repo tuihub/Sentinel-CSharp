@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sentinel.Plugin.Contracts;
+using Sentinel.Plugin.Models;
 using System.Reflection;
 using System.Windows.Input;
 
@@ -11,37 +12,53 @@ namespace Sentinel
     {
         private static ILoggerFactory _loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         private static ILogger _logger;
+        private static IServiceCollection _services;
         private static IServiceProvider _serviceProvider;
 
-        private static IList<Type> _pluginTypeList = new List<Type>();
+        private static IEnumerable<IPlugin> _plugins;
 
         static void Main(string[] args)
         {
+            // get Program logger
             _logger = _loggerFactory.CreateLogger<Program>();
-
-            var services = new ServiceCollection();
-            services.AddLogging(builder => builder.AddConsole());
-
-            LoadPlugins(services);
-
-            _serviceProvider = services.BuildServiceProvider();
-
-            var logger2 = _serviceProvider.GetRequiredService<ILogger<Program>>();
-
-            var plugins = _serviceProvider.GetServices<IPlugin>();
-            var options = plugins.Select(p => p.CommandLineOptions).ToArray();
-            var optionTypes = options.Select(o => o.GetType()).ToArray();
-
+            // add services for DI
+            _services = new ServiceCollection();
+            _services.AddLogging(builder => builder.AddConsole());
+            LoadPlugins();
+            _serviceProvider = _services.BuildServiceProvider();
+            // get CommandLineOptions from plugins
+            _plugins = _serviceProvider.GetServices<IPlugin>();
+            var optionTypes = _plugins.Select(p => p.CommandLineOptions).Select(o => o.GetType()).ToArray();
+            // parse CommandLineOptions
             Parser.Default.ParseArguments(args, optionTypes)
                           .WithParsed(Run);
         }
 
         private static void Run(object obj)
         {
-            throw new NotImplementedException();
+            var plugin = _plugins.Where(p => p.CommandLineOptions.GetType() == obj.GetType())
+                                 .FirstOrDefault();
+            if (plugin == null)
+            {
+                _logger.LogError($"Failed to find plugin for CommandLineOptions type {obj.GetType().FullName}");
+                Environment.Exit(1);
+            }
+            OptionsBase options = (OptionsBase)obj;
+            var entries = plugin.GetEntries();
+            if (options.PrintToConsole == true)
+            {
+                foreach (var entry in entries)
+                {
+                    Console.WriteLine(entry);
+                }
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
 
-        private static void LoadPlugins(ServiceCollection services)
+        private static void LoadPlugins()
         {
             string[] pluginPaths = new[]
             {
@@ -51,11 +68,11 @@ namespace Sentinel
             foreach (var path in pluginPaths)
             {
                 Assembly pluginAssembly = LoadPlugin(path);
-                GetIPlugins(pluginAssembly, services);
+                GetIPlugins(pluginAssembly);
             }
         }
 
-        private static void GetIPlugins(Assembly assembly, ServiceCollection services)
+        private static void GetIPlugins(Assembly assembly)
         {
             foreach (Type type in assembly.GetTypes())
             {
@@ -63,13 +80,12 @@ namespace Sentinel
                 {
                     try
                     {
-                        services.AddSingleton(typeof(IPlugin), type);
-                        _pluginTypeList.Add(type);
+                        _services.AddSingleton(typeof(IPlugin), type);
                         _logger.LogInformation($"Loaded IPlugin {type} from {assembly.FullName}");
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, $"Failed to load plugin: {type.FullName}");
+                        _logger.LogWarning(ex, $"Failed to load plugin: {type.FullName}");
                     }
                 }
             }
