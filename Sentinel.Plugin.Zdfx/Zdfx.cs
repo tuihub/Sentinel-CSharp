@@ -2,6 +2,7 @@
 using Sentinel.Plugin.Contracts;
 using Sentinel.Plugin.Models;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -45,7 +46,7 @@ namespace Sentinel.Plugin.Zdfx
                 var relativeDepth = GetRelativeDepth(dirPath, subDirPath);
                 _logger?.LogInformation($"relativeDepth = {relativeDepth}");
                 if (relativeDepth == options.Depth)
-                    GetEntriesFromSubDir(options.PublicUrlPrefix, options.Joiner, entries, subDirPath, subDirPath, new DirectoryInfo(subDirPath).Name);
+                    GetEntriesFromSubDir(options.PublicUrlPrefix, options.Joiner, entries, dirPath, subDirPath, new DirectoryInfo(subDirPath).Name);
             }
             return entries;
         }
@@ -78,7 +79,8 @@ namespace Sentinel.Plugin.Zdfx
                 }
                 _logger?.LogInformation($"Adding dir {dirPath}");
                 using SHA256 sha256 = SHA256.Create();
-                var sha256List = new List<byte>();
+                //var sha256List = new List<byte>();
+                var sha256BitArray = new BitArray(new byte[32]);
                 var sizeBytes = 0L;
                 string publicUrl;
                 if (publicUrlPrefix != null)
@@ -91,16 +93,20 @@ namespace Sentinel.Plugin.Zdfx
                     sizeBytes += new FileInfo(filePath).Length;
                     using var fileStream = File.OpenRead(filePath);
                     var fileSha256 = sha256.ComputeHash(fileStream);
-                    sha256List.AddRange(fileSha256);
+                    var fileSha256BitArray = new BitArray(fileSha256);
+                    //sha256List.AddRange(fileSha256);
+                    sha256BitArray.Xor(fileSha256BitArray);
                 }
-                _logger?.LogInformation($"Computing combined hash");
-                var combinedSha256 = sha256.ComputeHash(sha256List.ToArray());
+                _logger?.LogInformation($"Computing final hash");
+                //var finalSha256 = sha256.ComputeHash(sha256List.ToArray());
+                var finalSha256 = new byte[32];
+                sha256BitArray.CopyTo(finalSha256, 0);
                 entries.Add(new Entry
                 {
                     Name = curName,
                     SizeBytes = sizeBytes,
                     PublicUrl = publicUrl,
-                    Sha256 = combinedSha256
+                    Sha256 = finalSha256
                 });
             }
         }
