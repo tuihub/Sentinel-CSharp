@@ -26,7 +26,6 @@ namespace Sentinel.Plugin.Zdfx
 
         public IEnumerable<Entry> GetEntries(object objOptions)
         {
-            _logger?.LogInformation("Getting options");
             var options = (Options)objOptions;
             var dirPath = options.DirectoryPath;
             if (Directory.Exists(dirPath) == false)
@@ -37,25 +36,32 @@ namespace Sentinel.Plugin.Zdfx
             {
                 ReturnSpecialDirectories = false,
                 RecurseSubdirectories = true,
-                MaxRecursionDepth = options.Depth
+                MaxRecursionDepth = options.Depth - 1
             });
             var entries = new List<Entry>();
             foreach (var subDirPath in dirPaths)
             {
-                GetEntriesFromSubDir(options.PublicUrlPrefix, options.Joiner, entries, subDirPath, subDirPath, new DirectoryInfo(subDirPath).Name);
+                _logger?.LogInformation($"Processing top dir {subDirPath}");
+                var relativeDepth = GetRelativeDepth(dirPath, subDirPath);
+                _logger?.LogInformation($"relativeDepth = {relativeDepth}");
+                if (relativeDepth == options.Depth)
+                    GetEntriesFromSubDir(options.PublicUrlPrefix, options.Joiner, entries, subDirPath, subDirPath, new DirectoryInfo(subDirPath).Name);
             }
             return entries;
         }
 
         private int GetRelativeDepth(string baseDir, string dir)
         {
-
+            return Path.GetRelativePath(baseDir, dir).Count(c => c == Path.DirectorySeparatorChar) + 1;
         }
+
         private void GetEntriesFromSubDir(string? publicUrlPrefix, char joiner, List<Entry> entries, string baseDirPath, string dirPath, string curName)
         {
+            _logger?.LogInformation($"Processing sub dir {dirPath}");
             var filePaths = Directory.EnumerateFiles(dirPath, "*", SearchOption.TopDirectoryOnly);
             if (filePaths.Any() == false)
             {
+                _logger?.LogInformation($"Sub dir {dirPath} does not contain any file, searching for its sub dirs");
                 var subDirPaths = Directory.EnumerateDirectories(dirPath, "*", SearchOption.TopDirectoryOnly);
                 foreach (var subDirPath in subDirPaths)
                 {
@@ -64,22 +70,30 @@ namespace Sentinel.Plugin.Zdfx
             }
             else
             {
+                filePaths = Directory.EnumerateFiles(dirPath, "*", SearchOption.AllDirectories);
+                if (filePaths.Any() == false)
+                {
+                    _logger?.LogWarning($"Directory {dirPath} is empty.");
+                    return;
+                }
+                _logger?.LogInformation($"Adding dir {dirPath}");
+                using SHA256 sha256 = SHA256.Create();
+                var sha256List = new List<byte>();
+                var sizeBytes = 0L;
                 string publicUrl;
                 if (publicUrlPrefix != null)
                     publicUrl = $"{publicUrlPrefix}/{Path.GetRelativePath(baseDirPath, dirPath).Replace(Path.DirectorySeparatorChar, '/')}";
                 else
                     publicUrl = dirPath;
-                filePaths = Directory.EnumerateFiles(dirPath, "*", SearchOption.AllDirectories);
-                using SHA256 sha256 = SHA256.Create();
-                var sha256List = new List<byte>();
-                var sizeBytes = 0L;
                 foreach (var filePath in filePaths)
                 {
+                    _logger?.LogInformation($"Computing hash for {filePath}");
                     sizeBytes += new FileInfo(filePath).Length;
                     using var fileStream = File.OpenRead(filePath);
                     var fileSha256 = sha256.ComputeHash(fileStream);
                     sha256List.AddRange(fileSha256);
                 }
+                _logger?.LogInformation($"Computing combined hash");
                 var combinedSha256 = sha256.ComputeHash(sha256List.ToArray());
                 entries.Add(new Entry
                 {

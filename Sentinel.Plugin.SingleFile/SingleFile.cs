@@ -25,7 +25,6 @@ namespace Sentinel.Plugin.SingleFile
 
         public IEnumerable<Entry> GetEntries(object objOptions)
         {
-            _logger?.LogInformation("Adding entry");
             var options = (Options)objOptions;
             var dirPath = options.DirectoryPath;
             if (Directory.Exists(dirPath) == false)
