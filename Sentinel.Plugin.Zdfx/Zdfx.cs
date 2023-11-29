@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -79,8 +80,12 @@ namespace Sentinel.Plugin.Zdfx
                 }
                 _logger?.LogInformation($"Adding dir {dirPath}");
                 using SHA256 sha256 = SHA256.Create();
+                // concat
                 //var sha256List = new List<byte>();
-                var sha256BitArray = new BitArray(new byte[32]);
+                // xor
+                //var sha256BitArray = new BitArray(new byte[32]);
+                // add
+                var finSha256BitInt = new BigInteger();
                 var sizeBytes = 0L;
                 string publicUrl;
                 if (publicUrlPrefix != null)
@@ -93,14 +98,23 @@ namespace Sentinel.Plugin.Zdfx
                     sizeBytes += new FileInfo(filePath).Length;
                     using var fileStream = File.OpenRead(filePath);
                     var fileSha256 = sha256.ComputeHash(fileStream);
-                    var fileSha256BitArray = new BitArray(fileSha256);
+                    // concat
                     //sha256List.AddRange(fileSha256);
-                    sha256BitArray.Xor(fileSha256BitArray);
+                    // xor
+                    //var fileSha256BitArray = new BitArray(fileSha256);
+                    //sha256BitArray.Xor(fileSha256BitArray);
+                    // add
+                    finSha256BitInt += new BigInteger(fileSha256);
                 }
                 _logger?.LogInformation($"Computing final hash");
+                // concat
                 //var finalSha256 = sha256.ComputeHash(sha256List.ToArray());
+                // xor
+                //var finalSha256 = new byte[32];
+                //sha256BitArray.CopyTo(finalSha256, 0);
+                // add
                 var finalSha256 = new byte[32];
-                sha256BitArray.CopyTo(finalSha256, 0);
+                Array.Copy(finSha256BitInt.ToByteArray(), finalSha256, 32);
                 entries.Add(new Entry
                 {
                     Name = curName,
