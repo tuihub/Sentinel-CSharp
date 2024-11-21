@@ -1,9 +1,4 @@
 ﻿using Sentinel.Plugin.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Sentinel.Plugin.Contracts
 {
@@ -13,6 +8,6 @@ namespace Sentinel.Plugin.Contracts
         string Description { get; }
         object CommandLineOptions { get; }
 
-        IEnumerable<Entry> GetEntries(object options);
+        IEnumerable<SentinelAppBinary> GetSentinelAppBinaries(object options);
     }
 }
