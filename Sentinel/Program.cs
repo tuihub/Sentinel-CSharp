@@ -59,12 +59,20 @@ namespace Sentinel
             try
             {
                 OptionsBase options = (OptionsBase)obj;
-                var entries = plugin.GetEntries(obj);
+                var appBinaries = plugin.GetSentinelAppBinaries(obj);
                 if (options.PrintToConsole == true)
                 {
-                    foreach (var entry in entries)
+                    foreach (var appBinary in appBinaries)
                     {
-                        Console.WriteLine(entry);
+                        Console.WriteLine(appBinary);
+                        foreach (var fileEntry in appBinary.Files)
+                        {
+                            Console.WriteLine(fileEntry + $", Sha256 = {BitConverter.ToString(fileEntry.Sha256).Replace("-", "")}");
+                            foreach (var chunk in fileEntry.Chunks)
+                            {
+                                Console.WriteLine(chunk + $", Sha256 = {BitConverter.ToString(chunk.Sha256).Replace("-", "")}");
+                            }
+                        }
                     }
                 }
                 else
