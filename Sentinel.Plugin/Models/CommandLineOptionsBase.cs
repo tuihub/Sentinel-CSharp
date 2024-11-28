@@ -2,7 +2,7 @@
 
 namespace Sentinel.Plugin.Models
 {
-    public class OptionsBase
+    public class CommandLineOptionsBase
     {
         [Option('u', "url", Required = true, HelpText = "Librarian host url.", SetName = "server")]
         public string? LibrarianUrl { get; set; }

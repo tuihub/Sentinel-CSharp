@@ -1,50 +1,58 @@
 ﻿using CommandLine;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
+using Sentinel.Configs;
+using Sentinel.Helpers;
 using Sentinel.Plugin.Contracts;
 using Sentinel.Plugin.Models;
+using Sentinel.Workers;
 using System.Reflection;
 using System.Windows.Input;
 
 namespace Sentinel
 {
-    internal class Program
+    class Program
     {
-        private static readonly string _pluginBaseDir = "./plugins";
-
-        private static ILoggerFactory _loggerFactory = LoggerFactory.Create(builder => builder.AddSimpleConsole(o =>
-        {
-            o.IncludeScopes = true;
-            o.SingleLine = true;
-            o.TimestampFormat = "yyyy-MM-dd HH:mm:sszzz ";
-        }));
-        private static ILogger _logger;
-        private static IServiceCollection _services;
-        private static IServiceProvider _serviceProvider;
-
-        private static IEnumerable<IPlugin> _plugins;
+        private static IEnumerable<IPlugin> s_plugins = [];
+        private static ILogger s_logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<Program>();
 
         static void Main(string[] args)
         {
-            // get Program logger
-            _logger = _loggerFactory.CreateLogger<Program>();
-            // add services for DI
-            _services = new ServiceCollection();
-            _services.AddLogging(builder => builder.AddSimpleConsole(o =>
+            var builder = Host.CreateApplicationBuilder(args);
+
+            var pluginServices = new ServiceCollection();
+
+            var systemConfig = builder.Configuration.GetSection("SystemConfig").Get<SystemConfig>() ?? throw new Exception("Failed to parse SystemConfig");
+
+            // load plugins
+            PluginHelper.LoadPlugins(s_logger, pluginServices, systemConfig.PluginBaseDir);
+
+            // load config & register worker
+            var libraryConfig = builder.Configuration.GetSection("LibraryConfig");
+            s_plugins = pluginServices.BuildServiceProvider().GetServices<IPlugin>();
+            foreach (var config in libraryConfig.GetChildren())
             {
-                o.IncludeScopes = true;
-                o.SingleLine = true;
-                o.TimestampFormat = "yyyy-MM-dd HH:mm:sszzz ";
-            }));
-            LoadPlugins();
-            _serviceProvider = _services.BuildServiceProvider();
-            // get CommandLineOptions from plugins
-            _plugins = _serviceProvider.GetServices<IPlugin>();
-            var optionTypes = _plugins.Select(p => p.CommandLineOptions).Select(o => o.GetType()).ToArray();
+                var pluginName = config.GetSection("PluginName").Get<string>();
+                var plugin = s_plugins.FirstOrDefault(p => p.Name == pluginName)
+                    ?? throw new Exception($"Failed to find plugin with name {pluginName}");
+                plugin.Config = config.GetSection("PluginConfig").Get(plugin.Config.GetType())
+                    ?? throw new Exception($"Failed to parse PluginConfig for {pluginName}");
+
+                builder.Services.AddHostedService(w => new FSScanWorker(plugin, plugin.Config));
+            }
+
             // parse CommandLineOptions
+            var optionTypes = s_plugins.Select(p => p.CommandLineOptions).Select(o => o.GetType()).Append(typeof(DaemonModeOptions)).ToArray();
             Parser.Default.ParseArguments(args, optionTypes)
                           .WithParsed(Run);
+
+            IHost host = builder.Build();
+
+            host.Run();
+
         }
 
         private static void Run(object obj)
@@ -58,7 +66,7 @@ namespace Sentinel
             }
             try
             {
-                OptionsBase options = (OptionsBase)obj;
+                CommandLineOptionsBase options = (CommandLineOptionsBase)obj;
                 var appBinaries = plugin.GetSentinelAppBinaries(obj);
                 if (options.PrintToConsole == true)
                 {
@@ -85,63 +93,6 @@ namespace Sentinel
                 _logger.LogError(ex, $"Failed to run plugin {plugin.Name}");
                 Environment.Exit(1);
             }
-        }
-
-        private static void LoadPlugins()
-        {
-            var pluginPathList = new List<string>();
-            _logger.LogInformation($"Searching dlls from: {_pluginBaseDir}");
-            foreach (var filePath in Directory.EnumerateFiles(_pluginBaseDir, "*.dll", SearchOption.TopDirectoryOnly))
-            {
-                pluginPathList.Add(filePath);
-                _logger.LogInformation($"Added dll: {filePath}");
-            }
-            _logger.LogInformation($"Searching level 1 subdirectories from: {_pluginBaseDir}");
-            var l1SubDirs = Directory.EnumerateDirectories(_pluginBaseDir, "*", SearchOption.TopDirectoryOnly);
-            foreach (var dir in l1SubDirs)
-            {
-                var dirName = new DirectoryInfo(dir).Name;
-                string filePath = Path.Combine(dir, dirName + ".dll");
-                if (File.Exists(filePath))
-                {
-                    pluginPathList.Add(filePath);
-                    _logger.LogInformation($"Added dll: {filePath}");
-                }
-            }
-
-            foreach (var path in pluginPathList)
-            {
-                Assembly pluginAssembly = LoadPlugin(path);
-                GetIPlugins(pluginAssembly);
-            }
-        }
-
-        private static void GetIPlugins(Assembly assembly)
-        {
-            foreach (Type type in assembly.GetTypes())
-            {
-                if (typeof(IPlugin).IsAssignableFrom(type))
-                {
-                    try
-                    {
-                        _services.AddSingleton(typeof(IPlugin), type);
-                        _logger.LogInformation($"Loaded IPlugin {type} from {assembly.FullName}");
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, $"Failed to load plugin: {type.FullName}");
-                    }
-                }
-            }
-        }
-
-        private static Assembly LoadPlugin(string path)
-        {
-            string curAssemblyPath = Path.GetDirectoryName(Assembly.GetEntryAssembly()!.Location);
-            string pluginLocation = Path.GetFullPath(Path.Combine(curAssemblyPath, path.Replace('\\', Path.DirectorySeparatorChar)));
-            _logger.LogInformation($"Loading IPlugins from: {pluginLocation}");
-            PluginLoadContext loadContext = new PluginLoadContext(pluginLocation);
-            return loadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(pluginLocation)));
         }
     }
 }
