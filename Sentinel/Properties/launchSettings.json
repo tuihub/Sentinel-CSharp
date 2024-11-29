@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "Sentinel": {
-      "commandName": "Project",
-      "commandLineArgs": "sf -c -d \"E:\\Temp\\G-1000303\""
-    }
-  }
-}
