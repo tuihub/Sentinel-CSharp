@@ -12,10 +12,6 @@
 	  <Private>false</Private>
 	  <ExcludeAssets>runtime</ExcludeAssets>
 	</ProjectReference>
-	<ProjectReference Include="..\Sentinel\Sentinel.csproj">
-      <Private>false</Private>
-	  <ExcludeAssets>runtime</ExcludeAssets>
-	</ProjectReference>
   </ItemGroup>
 
 </Project>

@@ -35,8 +35,8 @@ namespace Sentinel.Plugin.SingleFile
                 try
                 {
                     _logger?.LogInformation($"Processing {filePath}");
-                    var fileEntry = FileEntryHelper.GetFileEntry(filePath, options.ChunkSizeBytes, _logger, !options.DryRun);
-                    appBinaries.Add(new SentinelAppBinary(filePath, fileEntry.SizeBytes, [fileEntry]));
+                    var fileEntry = FileEntryHelper.GetFileEntry(filePath, dirPath, options.ChunkSizeBytes, _logger, !options.DryRun);
+                    appBinaries.Add(new SentinelAppBinary(string.Empty, fileEntry.SizeBytes, [fileEntry]));
                 }
                 catch (Exception ex)
                 {

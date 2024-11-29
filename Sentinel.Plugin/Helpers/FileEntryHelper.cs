@@ -6,7 +6,7 @@ namespace Sentinel.Plugin.Helpers
 {
     public static class FileEntryHelper
     {
-        public static FileEntry GetFileEntry(string filePath, long chunkSizeBytes, ILogger? logger, bool calcSha256 = true, int bufferSizeBytes = 8192)
+        public static FileEntry GetFileEntry(string filePath, string baseDirPath, long chunkSizeBytes, ILogger? logger, bool calcSha256 = true, int bufferSizeBytes = 8192)
         {
             logger?.LogInformation($"GetFileEntry: Processing {filePath}");
             using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
@@ -60,7 +60,7 @@ namespace Sentinel.Plugin.Helpers
                 }
                 fileHash = new byte[32];
             }
-            return new FileEntry(filePath, fileSize, fileHash, chunks, lastWrite);
+            return new FileEntry(Path.GetRelativePath(baseDirPath, filePath), fileSize, fileHash, chunks, lastWrite);
         }
     }
 }
