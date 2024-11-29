@@ -53,7 +53,7 @@ namespace Sentinel.Helpers
                 {
                     try
                     {
-                        services.AddSingleton(typeof(IPlugin), type);
+                        services.AddTransient(typeof(IPlugin), type);
                         logger?.LogInformation($"Loaded IPlugin {type} from {assembly.FullName}");
                     }
                     catch (Exception ex)

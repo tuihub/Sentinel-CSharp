@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
+using Sentinel.Plugin.Configs;
 using Sentinel.Plugin.Contracts;
 
 namespace Sentinel.Workers
@@ -7,7 +8,7 @@ namespace Sentinel.Workers
     {
         private readonly IPlugin _plugin;
 
-        public FSScanWorker(IPlugin plugin, object config)
+        public FSScanWorker(IPlugin plugin, PluginConfigBase config)
         {
             _plugin = plugin ?? throw new ArgumentNullException(nameof(plugin));
             _plugin.Config = config ?? throw new ArgumentNullException(nameof(config));

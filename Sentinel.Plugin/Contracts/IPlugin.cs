@@ -1,4 +1,5 @@
-﻿using Sentinel.Plugin.Models;
+﻿using Sentinel.Plugin.Configs;
+using Sentinel.Plugin.Models;
 
 namespace Sentinel.Plugin.Contracts
 {
@@ -6,9 +7,9 @@ namespace Sentinel.Plugin.Contracts
     {
         string Name { get; }
         string Description { get; }
-        object CommandLineOptions { get; set; }
-        object Config { get; set; }
+        CommandLineOptionsBase CommandLineOptions { get; set; }
+        PluginConfigBase Config { get; set; }
 
-        IEnumerable<SentinelAppBinary> GetSentinelAppBinaries(object options);
+        IEnumerable<SentinelAppBinary> GetSentinelAppBinaries(CommandLineOptionsBase commandLineOptions);
     }
 }

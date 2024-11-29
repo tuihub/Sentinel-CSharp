@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Sentinel.Plugin.Configs;
 using Sentinel.Plugin.Contracts;
 using Sentinel.Plugin.Helpers;
 using Sentinel.Plugin.Models;
@@ -16,9 +17,10 @@ namespace Sentinel.Plugin.SingleFile
 
         public string Name => "SingleFile";
         public string Description => "A sentinel plugin that handles single files.";
-        public object CommandLineOptions => new Options();
+        public CommandLineOptionsBase CommandLineOptions { get; set; } = new Options();
+        public PluginConfigBase Config { get; set; } = new Config();
 
-        public IEnumerable<SentinelAppBinary> GetSentinelAppBinaries(object objOptions)
+        public IEnumerable<SentinelAppBinary> GetSentinelAppBinaries(CommandLineOptionsBase objOptions)
         {
             var options = (Options)objOptions;
             var dirPath = options.DirectoryPath;
