@@ -16,10 +16,18 @@ namespace Sentinel
     {
         private static IServiceProvider s_pluginServiceProvider = null!;
         private static IEnumerable<IPlugin> s_plugins = null!;
-        private static readonly ILogger s_logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<Program>();
+        private static ILogger s_logger = null!;
 
         static void Main(string[] args)
         {
+            bool debug = args.Any(x => x == "--debug");
+            s_logger = LoggerFactory.Create(builder =>
+            {
+                builder.AddConsole();
+                builder.AddDebug();
+                if (debug) { builder.SetMinimumLevel(LogLevel.Debug); }
+            }).CreateLogger<Program>();
+
             if (args.Any(x => x == "daemon" || x == "d"))
             {
                 var builder = Host.CreateApplicationBuilder(args);
@@ -54,6 +62,7 @@ namespace Sentinel
             }
             else
             {
+                // parse args
                 var argsList = args.ToList();
                 string pluginBaseDir;
                 int pluginBaseDirIndex = argsList.FindIndex(x => x == "--plugin-base-dir");
@@ -63,13 +72,21 @@ namespace Sentinel
                     if (argsList.Count < pluginBaseDirIndex + 2) { throw new Exception("Missing plugin base dir"); }
                     pluginBaseDir = argsList[pluginBaseDirIndex + 1];
                     if (pluginBaseDir.StartsWith('-')) { throw new Exception("Missing plugin base dir"); }
+                    argsList.RemoveRange(pluginBaseDirIndex, 2);
                 }
+                if (debug) { argsList.Remove("--debug"); }
+
                 var pluginServices = new ServiceCollection();
                 // load plugins
                 PluginHelper.LoadPlugins(s_logger, pluginServices, pluginBaseDir);
-                
-                // load logger
-                pluginServices.AddLogging(builder => builder.AddConsole());
+
+                // add logger
+                pluginServices.AddLogging(builder =>
+                {
+                    builder.AddConsole();
+                    builder.AddDebug();
+                    if (debug) { builder.SetMinimumLevel(LogLevel.Debug); }
+                });
 
                 // build plugin service provider
                 s_pluginServiceProvider = pluginServices.BuildServiceProvider();
@@ -80,7 +97,7 @@ namespace Sentinel
                     .Select(p => p.CommandLineOptions)
                     .Select(o => o.GetType())
                     .ToArray();
-                Parser.Default.ParseArguments(args, optionTypes)
+                Parser.Default.ParseArguments(argsList, optionTypes)
                               .WithParsed(Run);
             }
         }
