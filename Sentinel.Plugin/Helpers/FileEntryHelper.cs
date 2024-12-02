@@ -6,16 +6,16 @@ namespace Sentinel.Plugin.Helpers
 {
     public static class FileEntryHelper
     {
-        public static FileEntry GetFileEntry(string filePath, string baseDirPath, long chunkSizeBytes, ILogger? logger, bool calcSha256 = true, int bufferSizeBytes = 8192)
+        public static FileEntry GetFileEntry(ILogger? logger, string fileFullPath, string basePath, long chunkSizeBytes, bool calcSha256 = true, int bufferSizeBytes = 8192)
         {
-            logger?.LogInformation($"GetFileEntry: Processing {filePath}");
-            using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            logger?.LogInformation($"GetFileEntry: Processing {fileFullPath}");
+            using var fileStream = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read);
             long fileSize = fileStream.Length;
             if (chunkSizeBytes % bufferSizeBytes != 0) { throw new ArgumentException("Chunk size must be a multiple of buffer size."); }
             int chunkCount = (int)Math.Ceiling((double)fileSize / chunkSizeBytes);
             var chunks = new List<FileEntryChunk>(chunkCount);
             byte[] fileHash;
-            var lastWrite = File.GetLastWriteTimeUtc(filePath);
+            var lastWrite = File.GetLastWriteTimeUtc(fileFullPath);
 
             if (calcSha256)
             {
@@ -25,7 +25,7 @@ namespace Sentinel.Plugin.Helpers
                     long offsetBytes = i * chunkSizeBytes;
                     long currentChunkSizeBytes = Math.Min(offsetBytes + chunkSizeBytes, fileSize) - offsetBytes;
 
-                    logger?.LogInformation($"GetFileEntry: Processing chunk {i + 1} / {chunkCount} of {filePath}, ChunkSizeBytes = {currentChunkSizeBytes}");
+                    logger?.LogInformation($"GetFileEntry: Processing chunk {i + 1} / {chunkCount} of {fileFullPath}, ChunkSizeBytes = {currentChunkSizeBytes}");
                     using SHA256 sha256Chunk = SHA256.Create();
                     byte[] buffer = new byte[bufferSizeBytes];
                     long bytesRead = 0;
@@ -60,7 +60,12 @@ namespace Sentinel.Plugin.Helpers
                 }
                 fileHash = new byte[32];
             }
-            return new FileEntry(Path.GetRelativePath(baseDirPath, filePath), fileSize, fileHash, chunks, lastWrite);
+            return new FileEntry(Path.GetRelativePath(basePath, fileFullPath), fileSize, fileHash, chunks, lastWrite);
+        }
+
+        public static FileEntry GetFileEntry(string fileFullPath, string basePath, long chunkSizeBytes, bool calcSha256 = true, int bufferSizeBytes = 8192)
+        {
+            return GetFileEntry(null, fileFullPath, basePath, chunkSizeBytes, calcSha256, bufferSizeBytes);
         }
     }
 }

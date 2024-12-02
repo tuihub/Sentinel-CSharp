@@ -1,5 +1,7 @@
 ﻿using Sentinel.Plugin.Configs;
 using Sentinel.Plugin.Models;
+using Sentinel.Plugin.Options;
+using Sentinel.Plugin.Results;
 
 namespace Sentinel.Plugin.Contracts
 {
@@ -10,6 +12,7 @@ namespace Sentinel.Plugin.Contracts
         CommandLineOptionsBase CommandLineOptions { get; set; }
         PluginConfigBase Config { get; set; }
 
-        IEnumerable<SentinelAppBinary> GetSentinelAppBinaries(CommandLineOptionsBase commandLineOptions);
+        IEnumerable<AppBinary> GetAppBinaries(CommandLineOptionsBase commandLineOptions);
+        ScanChangeResult DoFullScan(IQueryable<AppBinary> appBinaries);
     }
 }

@@ -1,5 +1,5 @@
 ﻿using CommandLine;
-using Sentinel.Plugin.Models;
+using Sentinel.Plugin.Options;
 
 namespace Sentinel.Plugin.SingleFile
 {

@@ -1,14 +1,9 @@
-﻿using Sentinel.Plugin.Attributes;
-using System.ComponentModel.DataAnnotations;
-
-namespace Sentinel.Plugin.Models
+﻿namespace Sentinel.Plugin.Models
 {
     public record FileEntry
     {
         public string FilePath { get; init; }
         public long SizeBytes { get; init; }
-        [IsFixedLength]
-        [MaxLength(32)]
         public byte[] Sha256 { get; init; }
         public IEnumerable<FileEntryChunk> Chunks { get; init; }
         public DateTime LastWriteUtc { get; init; }

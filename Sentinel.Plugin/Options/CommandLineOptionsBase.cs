@@ -1,13 +1,9 @@
 ﻿using CommandLine;
 
-namespace Sentinel.Plugin.Models
+namespace Sentinel.Plugin.Options
 {
     public class CommandLineOptionsBase
     {
-        [Option('u', "url", Required = true, HelpText = "Librarian host url.", SetName = "server")]
-        public string? LibrarianUrl { get; set; }
-        [Option('t', "token", Required = true, HelpText = "Librarian host token.", SetName = "server")]
-        public string? LibrarianToken { get; set; }
         [Option('c', "console", Required = true, HelpText = "Print to console.", SetName = "console")]
         public bool PrintToConsole { get; set; }
 
