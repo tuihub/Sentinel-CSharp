@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Sentinel.Attributes;
 using Sentinel.Configs;
-using Sentinel.Models;
-using Sentinel.Plugin.Attributes;
+using Sentinel.Models.Db;
 using System.Reflection;
 
 namespace Sentinel

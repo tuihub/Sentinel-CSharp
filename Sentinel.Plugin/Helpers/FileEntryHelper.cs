@@ -6,9 +6,10 @@ namespace Sentinel.Plugin.Helpers
 {
     public static class FileEntryHelper
     {
-        public static FileEntry GetFileEntry(ILogger? logger, string fileFullPath, string basePath, long chunkSizeBytes, bool calcSha256 = true, int bufferSizeBytes = 8192)
+        public static async Task<FileEntry> GetFileEntryAsync(ILogger? logger, string fileFullPath, string basePath, long chunkSizeBytes,
+            bool calcSha256 = true, int bufferSizeBytes = 8192, CancellationToken ct = default)
         {
-            logger?.LogInformation($"GetFileEntry: Processing {fileFullPath}");
+            logger?.LogInformation($"GetFileEntryAsync: Processing {fileFullPath}");
             using var fileStream = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read);
             long fileSize = fileStream.Length;
             if (chunkSizeBytes % bufferSizeBytes != 0) { throw new ArgumentException("Chunk size must be a multiple of buffer size."); }
@@ -22,17 +23,22 @@ namespace Sentinel.Plugin.Helpers
                 using SHA256 sha256File = SHA256.Create();
                 for (int i = 0; i < chunkCount; i++)
                 {
+                    ct.ThrowIfCancellationRequested();
+
                     long offsetBytes = i * chunkSizeBytes;
                     long currentChunkSizeBytes = Math.Min(offsetBytes + chunkSizeBytes, fileSize) - offsetBytes;
 
-                    logger?.LogInformation($"GetFileEntry: Processing chunk {i + 1} / {chunkCount} of {fileFullPath}, ChunkSizeBytes = {currentChunkSizeBytes}");
+                    logger?.LogInformation($"GetFileEntryAsync: Processing chunk {i + 1} / {chunkCount} of {fileFullPath}, ChunkSizeBytes = {currentChunkSizeBytes}");
                     using SHA256 sha256Chunk = SHA256.Create();
                     byte[] buffer = new byte[bufferSizeBytes];
                     long bytesRead = 0;
                     while (bytesRead < currentChunkSizeBytes)
                     {
                         int readSize = (int)Math.Min(buffer.Length, currentChunkSizeBytes - bytesRead);
-                        int read = fileStream.Read(buffer, 0, readSize);
+                        int read = await fileStream.ReadAsync(buffer, 0, readSize, ct);
+
+                        ct.ThrowIfCancellationRequested();
+
                         if (read == 0)
                         {
                             break;
@@ -53,6 +59,8 @@ namespace Sentinel.Plugin.Helpers
             {
                 for (int i = 0; i < chunkCount; i++)
                 {
+                    ct.ThrowIfCancellationRequested();
+
                     long offsetBytes = i * chunkSizeBytes;
                     long endBytes = Math.Min(offsetBytes + chunkSizeBytes, fileSize);
                     long currentChunkSize = endBytes - offsetBytes;
@@ -63,9 +71,22 @@ namespace Sentinel.Plugin.Helpers
             return new FileEntry(Path.GetRelativePath(basePath, fileFullPath), fileSize, fileHash, chunks, lastWrite);
         }
 
-        public static FileEntry GetFileEntry(string fileFullPath, string basePath, long chunkSizeBytes, bool calcSha256 = true, int bufferSizeBytes = 8192)
+        public static Task<FileEntry> GetFileEntryAsync(string fileFullPath, string basePath, long chunkSizeBytes,
+            bool calcSha256 = true, int bufferSizeBytes = 8192, CancellationToken ct = default)
         {
-            return GetFileEntry(null, fileFullPath, basePath, chunkSizeBytes, calcSha256, bufferSizeBytes);
+            return GetFileEntryAsync(null, fileFullPath, basePath, chunkSizeBytes, calcSha256, bufferSizeBytes, ct);
+        }
+
+        public static FileEntry GetFileEntry(ILogger? logger, string fileFullPath, string basePath, long chunkSizeBytes,
+            bool calcSha256 = true, int bufferSizeBytes = 8192)
+        {
+            return GetFileEntryAsync(logger, fileFullPath, basePath, chunkSizeBytes, calcSha256, bufferSizeBytes).Result;
+        }
+
+        public static FileEntry GetFileEntry(string fileFullPath, string basePath, long chunkSizeBytes,
+            bool calcSha256 = true, int bufferSizeBytes = 8192)
+        {
+            return GetFileEntryAsync(null, fileFullPath, basePath, chunkSizeBytes, calcSha256, bufferSizeBytes).Result;
         }
     }
 }

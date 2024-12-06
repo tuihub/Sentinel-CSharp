@@ -7,7 +7,7 @@ using Sentinel.Configs;
 using Sentinel.Helpers;
 using Sentinel.Plugin.Configs;
 using Sentinel.Plugin.Contracts;
-using Sentinel.Plugin.Models;
+using Sentinel.Plugin.Options;
 using Sentinel.Workers;
 
 namespace Sentinel
@@ -113,7 +113,7 @@ namespace Sentinel
             try
             {
                 CommandLineOptionsBase options = (CommandLineOptionsBase)obj;
-                var appBinaries = plugin.GetSentinelAppBinaries(options);
+                var appBinaries = plugin.GetAppBinaries(options);
                 if (options.PrintToConsole == true)
                 {
                     foreach (var appBinary in appBinaries)

@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
-namespace Sentinel.Models
+namespace Sentinel.Models.Db
 {
     [Index(nameof(Path))]
     public record AppBinaryBaseDir
