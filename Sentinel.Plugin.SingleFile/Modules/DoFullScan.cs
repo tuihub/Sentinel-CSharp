@@ -16,12 +16,14 @@ namespace Sentinel.Plugin.SingleFile
             var appBinariesToRecheck = appBinaries.ExceptBy(filesToRemove, x => x.Path);
 
             _logger?.LogDebug($"DoFullScanAsync: Files to remove: {string.Join(", ", filesToRemove)}");
+            var appBinariesToRemove = appBinaries.Where(x => filesToRemove.Contains(x.Files.First().FilePath)).ToList();
 
             var appBinariesToAdd = new List<AppBinary>(filesToAdd.Count());
             foreach (var file in filesToAdd)
             {
                 _logger?.LogInformation($"DoFullScanAsync: Adding {file}");
                 var fileEntry = await FileEntryHelper.GetFileEntryAsync(_logger, file, file, Config.ChunkSizeBytes, ct: ct);
+                ct.ThrowIfCancellationRequested();
                 appBinariesToAdd.Add(new AppBinary(file, fileEntry.SizeBytes, [fileEntry]));
             }
 
@@ -32,6 +34,7 @@ namespace Sentinel.Plugin.SingleFile
                 {
                     _logger?.LogInformation("DoFullScanAsync: Rechecking " + appBinary.Path);
                     var fileEntry = await FileEntryHelper.GetFileEntryAsync(_logger, appBinary.Path, appBinary.Path, Config.ChunkSizeBytes, ct: ct);
+                    ct.ThrowIfCancellationRequested();
                     if (fileEntry.Sha256 != appBinary.Files.First().Sha256)
                     {
                         appBinariesToUpdate.Add(new AppBinary(appBinary.Path, fileEntry.SizeBytes, [fileEntry]));
@@ -45,15 +48,10 @@ namespace Sentinel.Plugin.SingleFile
 
             return new ScanChangeResult
             {
-                AppBinaryPathsToRemove = filesToRemove,
+                AppBinariesToRemove = appBinariesToRemove,
                 AppBinariesToAdd = appBinariesToAdd,
                 AppBinariesToUpdate = appBinariesToUpdate
             };
-        }
-
-        public ScanChangeResult DoFullScan(IQueryable<AppBinary> appBinaries)
-        {
-            return DoFullScanAsync(appBinaries).Result;
         }
     }
 }

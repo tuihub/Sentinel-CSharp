@@ -11,6 +11,15 @@ namespace Sentinel.Models.Db
         [MaxLength(32)]
         public byte[] Sha256 { get; set; } = null!;
 
+        // constructor
+        public AppBinaryFileChunk() { }
+        public AppBinaryFileChunk(Plugin.Models.FileEntryChunk pluginFileEntryChunk)
+        {
+            OffsetBytes = pluginFileEntryChunk.OffsetBytes;
+            SizeBytes = pluginFileEntryChunk.SizeBytes;
+            Sha256 = pluginFileEntryChunk.Sha256;
+        }
+
         // function
         public Plugin.Models.FileEntryChunk ToPluginModel()
         {

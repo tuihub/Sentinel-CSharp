@@ -12,12 +12,23 @@ namespace Sentinel.Models.Db
         [MaxLength(4096)]
         public string Path { get; set; } = null!;
         public long SizeBytes { get; set; }
-        public IEnumerable<AppBinaryFile> Files { get; set; } = null!;
+        public IList<AppBinaryFile> Files { get; set; } = null!;
         public Guid Guid { get; set; }
         // relation
         // one-to-many relation (required, to parent)
         public long AppBinaryBaseDirId { get; set; }
         public AppBinaryBaseDir AppBinaryBaseDir { get; set; } = null!;
+
+        // constructor
+        public AppBinary() { }
+        public AppBinary(Plugin.Models.AppBinary pluginAppBinary, long appBinaryBaseDirId)
+        {
+            Path = pluginAppBinary.Path;
+            SizeBytes = pluginAppBinary.SizeBytes;
+            Files = pluginAppBinary.Files.Select(x => new AppBinaryFile(x)).ToList();
+            Guid = pluginAppBinary.Guid;
+            AppBinaryBaseDirId = appBinaryBaseDirId;
+        }
 
         // function
         public Plugin.Models.AppBinary ToPluginModel()

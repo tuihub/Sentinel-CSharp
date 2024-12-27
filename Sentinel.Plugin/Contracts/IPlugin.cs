@@ -13,6 +13,10 @@ namespace Sentinel.Plugin.Contracts
         PluginConfigBase Config { get; set; }
 
         IEnumerable<AppBinary> GetAppBinaries(CommandLineOptionsBase commandLineOptions);
-        ScanChangeResult DoFullScan(IQueryable<AppBinary> appBinaries);
+        Task<ScanChangeResult> DoFullScanAsync(IQueryable<AppBinary> appBinaries, CancellationToken ct = default);
+        ScanChangeResult DoFullScan(IQueryable<AppBinary> appBinaries)
+        {
+            return DoFullScanAsync(appBinaries).Result;
+        }
     }
 }

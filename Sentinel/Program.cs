@@ -52,9 +52,21 @@ namespace Sentinel
                     plugin.Config = config.GetSection("PluginConfig").Get(plugin.Config.GetType()) as PluginConfigBase
                         ?? throw new Exception($"Failed to parse PluginConfig for {pluginName}");
 
-                    builder.Services.AddHostedService(w => new FSScanWorker(
-                        (IPlugin)s_pluginServiceProvider.GetRequiredService(plugin.GetType()),
-                        plugin.Config));
+                    // fswatcher not implemented
+                    //builder.Services.AddHostedService<FSWatchWorker>(p => new FSWatchWorker(
+                    //    p.GetRequiredService<ILogger<FSWatchWorker>>(),
+                    //    p.GetRequiredService<SentinelDbContext>(),
+                    //    new FSScanWorker(
+                    //        p.GetRequiredService<ILogger<FSWatchWorker>>(),
+                    //        p.GetRequiredService<SentinelDbContext>(),
+                    //        plugin),
+                    //    plugin.Config.LibraryFolder));
+
+                    builder.Services.AddHostedService<ScheduledFSScanWorker>(p => new ScheduledFSScanWorker(
+                        p.GetRequiredService<ILogger<ScheduledFSScanWorker>>(),
+                        p.GetRequiredService<SentinelDbContext>(),
+                        plugin,
+                        TimeSpan.FromMinutes(systemConfig.LibraryScanIntervalMinutes)));
                 }
 
                 IHost host = builder.Build();

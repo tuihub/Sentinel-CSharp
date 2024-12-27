@@ -13,8 +13,19 @@ namespace Sentinel.Models.Db
         [IsFixedLength]
         [MaxLength(32)]
         public byte[] Sha256 { get; set; } = null!;
-        public IEnumerable<AppBinaryFileChunk> Chunks { get; set; } = null!;
+        public IList<AppBinaryFileChunk> Chunks { get; set; } = null!;
         public DateTime LastWriteUtc { get; set; }
+
+        // constructor
+        public AppBinaryFile() { }
+        public AppBinaryFile(Plugin.Models.FileEntry pluginFileEntry)
+        {
+            FilePath = pluginFileEntry.FilePath;
+            SizeBytes = pluginFileEntry.SizeBytes;
+            Sha256 = pluginFileEntry.Sha256;
+            Chunks = pluginFileEntry.Chunks.Select(x => new AppBinaryFileChunk(x)).ToList();
+            LastWriteUtc = pluginFileEntry.LastWriteUtc;
+        }
 
         // function
         public Plugin.Models.FileEntry ToPluginModel()
