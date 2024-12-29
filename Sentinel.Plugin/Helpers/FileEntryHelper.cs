@@ -28,7 +28,7 @@ namespace Sentinel.Plugin.Helpers
                     long offsetBytes = i * chunkSizeBytes;
                     long currentChunkSizeBytes = Math.Min(offsetBytes + chunkSizeBytes, fileSize) - offsetBytes;
 
-                    logger?.LogInformation($"GetFileEntryAsync: Processing chunk {i + 1} / {chunkCount} of {fileFullPath}, ChunkSizeBytes = {currentChunkSizeBytes}");
+                    logger?.LogDebug($"GetFileEntryAsync: Processing chunk {i + 1} / {chunkCount} of {fileFullPath}, ChunkSizeBytes = {currentChunkSizeBytes}");
                     using SHA256 sha256Chunk = SHA256.Create();
                     byte[] buffer = new byte[bufferSizeBytes];
                     long bytesRead = 0;

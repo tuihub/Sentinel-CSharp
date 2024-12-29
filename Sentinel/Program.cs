@@ -37,17 +37,19 @@ namespace Sentinel
                 var systemConfig = builder.Configuration.GetSection("SystemConfig").Get<SystemConfig>()
                     ?? throw new Exception("Failed to parse SystemConfig");
 
+                // load built-in plugins
+                pluginServices.AddTransient<IPlugin, Plugin.SingleFile.SingleFile>();
+
                 // load plugins
                 PluginHelper.LoadPlugins(s_logger, pluginServices, systemConfig.PluginBaseDir);
 
                 // load config & register worker
                 var libraryConfig = builder.Configuration.GetSection("LibraryConfig");
                 s_pluginServiceProvider = pluginServices.BuildServiceProvider();
-                s_plugins = s_pluginServiceProvider.GetServices<IPlugin>();
                 foreach (var config in libraryConfig.GetChildren())
                 {
                     var pluginName = config.GetSection("PluginName").Get<string>();
-                    var plugin = s_plugins.FirstOrDefault(p => p.Name == pluginName)
+                    var plugin = s_pluginServiceProvider.GetServices<IPlugin>().FirstOrDefault(p => p.Name == pluginName)
                         ?? throw new Exception($"Failed to find plugin with name {pluginName}");
                     plugin.Config = config.GetSection("PluginConfig").Get(plugin.Config.GetType()) as PluginConfigBase
                         ?? throw new Exception($"Failed to parse PluginConfig for {pluginName}");
@@ -89,8 +91,6 @@ namespace Sentinel
                 if (debug) { argsList.Remove("--debug"); }
 
                 var pluginServices = new ServiceCollection();
-                // load plugins
-                PluginHelper.LoadPlugins(s_logger, pluginServices, pluginBaseDir);
 
                 // add logger
                 pluginServices.AddLogging(builder =>
@@ -99,6 +99,12 @@ namespace Sentinel
                     builder.AddDebug();
                     if (debug) { builder.SetMinimumLevel(LogLevel.Debug); }
                 });
+
+                // load built-in plugins
+                pluginServices.AddTransient<IPlugin, Plugin.SingleFile.SingleFile>();
+
+                // load plugins
+                PluginHelper.LoadPlugins(s_logger, pluginServices, pluginBaseDir);
 
                 // build plugin service provider
                 s_pluginServiceProvider = pluginServices.BuildServiceProvider();

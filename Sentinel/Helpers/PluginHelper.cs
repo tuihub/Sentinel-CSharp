@@ -10,6 +10,11 @@ namespace Sentinel.Helpers
     {
         public static void LoadPlugins(ILogger? logger, IServiceCollection services, string pluginBaseDir)
         {
+            if (Directory.Exists(pluginBaseDir) == false)
+            {
+                logger?.LogWarning($"PluginBaseDir {pluginBaseDir} does not exist, cannot load plugins.");
+                return;
+            }
             var pluginPathList = new List<string>();
             logger?.LogDebug($"Searching dlls from: {pluginBaseDir}");
             foreach (var filePath in Directory.EnumerateFiles(pluginBaseDir, "*.dll", SearchOption.TopDirectoryOnly))
