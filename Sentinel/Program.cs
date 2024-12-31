@@ -1,14 +1,18 @@
 ﻿using CommandLine;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Sentinel.Configs;
 using Sentinel.Helpers;
+using Sentinel.Interceptors;
 using Sentinel.Plugin.Configs;
 using Sentinel.Plugin.Contracts;
 using Sentinel.Plugin.Options;
+using Sentinel.Services;
 using Sentinel.Workers;
+using TuiHub.Protos.Librarian.Sephirah.V1;
 
 namespace Sentinel
 {
@@ -36,6 +40,23 @@ namespace Sentinel
 
                 var systemConfig = builder.Configuration.GetSection("SystemConfig").Get<SystemConfig>()
                     ?? throw new Exception("Failed to parse SystemConfig");
+
+                // add db context
+                builder.Services.AddDbContext<SentinelDbContext>(o => o.UseSqlite($"Data Source={systemConfig.DbPath}"));
+
+                // add token service
+                builder.Services.AddSingleton<StateService>(p => new StateService(
+                    p.GetRequiredService<ILogger<StateService>>(),
+                    systemConfig,
+                    p.GetRequiredService<IHostEnvironment>()
+                    ));
+
+                // add grpc client
+                builder.Services.AddGrpcClient<LibrarianSephirahService.LibrarianSephirahServiceClient>(o =>
+                    {
+                        o.Address = new Uri(systemConfig.LibrarianUrl);
+                    })
+                    .AddInterceptor<ClientTokenInterceptor>();
 
                 // load built-in plugins
                 pluginServices.AddTransient<IPlugin, Plugin.SingleFile.SingleFile>();
@@ -72,6 +93,15 @@ namespace Sentinel
                 }
 
                 IHost host = builder.Build();
+
+                // ensure db
+                using (var scope = host.Services.CreateScope())
+                {
+                    var dbContext = scope.ServiceProvider.GetRequiredService<SentinelDbContext>();
+                    // migrate db
+                    dbContext.Database.Migrate();
+                }
+
                 host.Run();
             }
             else
