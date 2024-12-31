@@ -3,6 +3,6 @@
     public class AppSettings
     {
         public SystemConfig SystemConfig { get; set; } = null!;
-        public IList<LibraryConfig> LibraryConfigs { get; set; } = null!;
+        public SentinelConfig SentinelConfig { get; set; } = null!;
     }
 }

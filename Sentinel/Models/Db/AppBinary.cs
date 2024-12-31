@@ -35,5 +35,15 @@ namespace Sentinel.Models.Db
         {
             return new Plugin.Models.AppBinary(Path, SizeBytes, Files.Select(x => x.ToPluginModel()));
         }
+        public TuiHub.Protos.Librarian.Sephirah.V1.AppBinary ToProto(bool needToken)
+        {
+            return new TuiHub.Protos.Librarian.Sephirah.V1.AppBinary
+            {
+                Name = Path,
+                SizeBytes = SizeBytes,
+                NeedToken = needToken,
+                Files = { Files.Select(x => x.ToProto()) }
+            };
+        }
     }
 }

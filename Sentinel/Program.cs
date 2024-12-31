@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Sentinel.Configs;
 using Sentinel.Helpers;
 using Sentinel.Interceptors;
+using Sentinel.Models.Db;
 using Sentinel.Plugin.Configs;
 using Sentinel.Plugin.Contracts;
 using Sentinel.Plugin.Options;
@@ -38,18 +39,19 @@ namespace Sentinel
 
                 var pluginServices = new ServiceCollection();
 
+                // get config
                 var systemConfig = builder.Configuration.GetSection("SystemConfig").Get<SystemConfig>()
                     ?? throw new Exception("Failed to parse SystemConfig");
+                builder.Services.AddSingleton(systemConfig);
+                var sentinelConfig = builder.Configuration.GetSection("SentinelConfig").Get<SentinelConfig>()
+                    ?? throw new Exception("Failed to parse SentinelConfig");
+                builder.Services.AddSingleton(sentinelConfig);
 
                 // add db context
                 builder.Services.AddDbContext<SentinelDbContext>(o => o.UseSqlite($"Data Source={systemConfig.DbPath}"));
 
                 // add token service
-                builder.Services.AddSingleton<StateService>(p => new StateService(
-                    p.GetRequiredService<ILogger<StateService>>(),
-                    systemConfig,
-                    p.GetRequiredService<IHostEnvironment>()
-                    ));
+                builder.Services.AddSingleton<StateService>();
 
                 // add grpc client
                 builder.Services.AddGrpcClient<LibrarianSephirahService.LibrarianSephirahServiceClient>(o =>
@@ -65,14 +67,14 @@ namespace Sentinel
                 PluginHelper.LoadPlugins(s_logger, pluginServices, systemConfig.PluginBaseDir);
 
                 // load config & register worker
-                var libraryConfig = builder.Configuration.GetSection("LibraryConfig");
+                var libraryConfigs = systemConfig.LibraryConfigs;
                 s_pluginServiceProvider = pluginServices.BuildServiceProvider();
-                foreach (var config in libraryConfig.GetChildren())
+                foreach (var config in libraryConfigs)
                 {
-                    var pluginName = config.GetSection("PluginName").Get<string>();
+                    var pluginName = config.PluginName;
                     var plugin = s_pluginServiceProvider.GetServices<IPlugin>().FirstOrDefault(p => p.Name == pluginName)
                         ?? throw new Exception($"Failed to find plugin with name {pluginName}");
-                    plugin.Config = config.GetSection("PluginConfig").Get(plugin.Config.GetType()) as PluginConfigBase
+                    plugin.Config = config.PluginConfig as PluginConfigBase
                         ?? throw new Exception($"Failed to parse PluginConfig for {pluginName}");
 
                     // fswatcher not implemented
@@ -94,12 +96,27 @@ namespace Sentinel
 
                 IHost host = builder.Build();
 
-                // ensure db
+                // ensure db & init
                 using (var scope = host.Services.CreateScope())
                 {
                     var dbContext = scope.ServiceProvider.GetRequiredService<SentinelDbContext>();
                     // migrate db
                     dbContext.Database.Migrate();
+                    // init base dirs
+                    foreach (var libraryConfig in libraryConfigs)
+                    {
+                        var config = (libraryConfig.PluginConfig as PluginConfigBase)!;
+                        var path = config.LibraryFolder;
+                        if (!dbContext.AppBinaryBaseDirs.Any(d => d.Path == path))
+                        {
+                            dbContext.AppBinaryBaseDirs.Add(new AppBinaryBaseDir
+                            {
+                                Name = config.LibraryName,
+                                Path = path
+                            });
+                        }
+                    }
+                    dbContext.SaveChanges();
                 }
 
                 host.Run();

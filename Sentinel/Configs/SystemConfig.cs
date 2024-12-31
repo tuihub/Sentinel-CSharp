@@ -6,7 +6,7 @@
         public string LibrarianRefreshToken { get; set; } = string.Empty;
         public string DbPath { get; set; } = "./sentinel.db";
         public string PluginBaseDir { get; set; } = "./plugins";
-        public IEnumerable<LibraryConfig> LibraryConfigs { get; set; } = Enumerable.Empty<LibraryConfig>();
+        public IList<LibraryConfig> LibraryConfigs { get; set; } = new List<LibraryConfig>();
         public long LibraryScanIntervalMinutes { get; set; } = 1440;
     }
 }

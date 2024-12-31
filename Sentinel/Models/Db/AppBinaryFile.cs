@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Google.Protobuf;
+using Microsoft.EntityFrameworkCore;
 using Sentinel.Attributes;
 using System.ComponentModel.DataAnnotations;
 
@@ -31,6 +32,17 @@ namespace Sentinel.Models.Db
         public Plugin.Models.FileEntry ToPluginModel()
         {
             return new Plugin.Models.FileEntry(FilePath, SizeBytes, Sha256, Chunks.Select(x => x.ToPluginModel()), LastWriteUtc);
+        }
+        public TuiHub.Protos.Librarian.Sephirah.V1.AppBinaryFile ToProto()
+        {
+            return new TuiHub.Protos.Librarian.Sephirah.V1.AppBinaryFile
+            {
+                Name = Path.GetFileName(FilePath),
+                SizeBytes = SizeBytes,
+                Sha256 = UnsafeByteOperations.UnsafeWrap(Sha256.AsMemory()),
+                ServerFilePath = FilePath,
+                Chunks = { Chunks.Select(x => x.ToProto()) }
+            };
         }
     }
 }
