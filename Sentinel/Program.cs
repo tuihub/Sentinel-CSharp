@@ -55,6 +55,7 @@ namespace Sentinel
                 builder.Services.AddSingleton<StateService>();
 
                 // add grpc services
+                builder.Services.AddSingleton<ClientTokenInterceptor>();
                 builder.Services.AddGrpcClient<LibrarianSephirahService.LibrarianSephirahServiceClient>(o =>
                     {
                         o.Address = new Uri(systemConfig.LibrarianUrl);
