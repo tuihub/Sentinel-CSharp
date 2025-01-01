@@ -26,8 +26,9 @@ namespace Sentinel.Services
             _dbContext = sentinelDbContext;
         }
 
-        public async Task<ReportSentinelInformationResponse> ReportSentinelInformationAsync()
+        public async Task<ReportSentinelInformationResponse> ReportSentinelInformationAsync(CancellationToken ct = default)
         {
+            _logger.LogInformation("Reporting Sentinel information");
             var request = new ReportSentinelInformationRequest()
             {
                 Scheme = ProtoHelper.ToServerScheme(_sentinelConfig.Scheme),
@@ -42,11 +43,12 @@ namespace Sentinel.Services
                     Id = _dbContext.AppBinaryBaseDirs.Single(d => d.Path == (x.PluginConfig as PluginConfigBase)!.LibraryFolder).Id,
                     DownloadBasePath = x.DownloadBasePath
                 }));
-            return await _client.ReportSentinelInformationAsync(request);
+            return await _client.ReportSentinelInformationAsync(request, cancellationToken: ct);
         }
 
-        public async Task<ReportAppBinariesResponse> ReportAppBinariesAsync()
+        public async Task<ReportAppBinariesResponse> ReportAppBinariesAsync(CancellationToken ct = default)
         {
+            _logger.LogInformation("Reporting AppBinaries");
             var libraryPaths = _systemConfig.LibraryConfigs.Select(x => (x.PluginConfig as PluginConfigBase)!.LibraryFolder).ToList();
             var sentinelAppBinaries = _dbContext.AppBinaries
                 .Include(x => x.AppBinaryBaseDir)
@@ -61,7 +63,7 @@ namespace Sentinel.Services
                 });
             var request = new ReportAppBinariesRequest();
             request.SentinelAppBinaries.AddRange(sentinelAppBinaries);
-            return await _client.ReportAppBinariesAsync(request);
+            return await _client.ReportAppBinariesAsync(request, cancellationToken: ct);
         }
     }
 }

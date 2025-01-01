@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Sentinel.Helpers;
 using Sentinel.Plugin.Contracts;
+using Sentinel.Services;
 
 namespace Sentinel.Workers
 {
@@ -11,15 +12,18 @@ namespace Sentinel.Workers
         private readonly ILogger<ScheduledFSScanWorker> _logger;
         private readonly SentinelDbContext _dbContext;
         private readonly IPlugin _plugin;
+        private readonly LibrarianClientService _librarianClientService;
         private readonly TimeSpan _scanInterval;
 
-        private long _appBinaryBaseDirId;
+        private readonly long _appBinaryBaseDirId;
 
-        public ScheduledFSScanWorker(ILogger<ScheduledFSScanWorker> logger, SentinelDbContext dbContext, IPlugin plugin, TimeSpan scanInterval)
+        public ScheduledFSScanWorker(ILogger<ScheduledFSScanWorker> logger, SentinelDbContext dbContext, IPlugin plugin,
+            LibrarianClientService librarianClientService, TimeSpan scanInterval)
         {
             _logger = logger;
             _dbContext = dbContext;
             _plugin = plugin;
+            _librarianClientService = librarianClientService;
             _scanInterval = scanInterval;
 
             _appBinaryBaseDirId = _dbContext.AppBinaryBaseDirs
@@ -44,6 +48,8 @@ namespace Sentinel.Workers
                     stoppingToken.ThrowIfCancellationRequested();
 
                     await _dbContext.ApplyScanChangeResultsAsync(_logger, result, _appBinaryBaseDirId, stoppingToken);
+
+                    await _librarianClientService.ReportAppBinariesAsync(stoppingToken);
 
                     await Task.Delay(_scanInterval, stoppingToken);
                     stoppingToken.ThrowIfCancellationRequested();

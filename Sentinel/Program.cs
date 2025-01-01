@@ -53,12 +53,13 @@ namespace Sentinel
                 // add token service
                 builder.Services.AddSingleton<StateService>();
 
-                // add grpc client
+                // add grpc services
                 builder.Services.AddGrpcClient<LibrarianSephirahService.LibrarianSephirahServiceClient>(o =>
                     {
                         o.Address = new Uri(systemConfig.LibrarianUrl);
                     })
                     .AddInterceptor<ClientTokenInterceptor>();
+                builder.Services.AddSingleton<LibrarianClientService>();
 
                 // load built-in plugins
                 pluginServices.AddTransient<IPlugin, Plugin.SingleFile.SingleFile>();
@@ -91,6 +92,7 @@ namespace Sentinel
                         p.GetRequiredService<ILogger<ScheduledFSScanWorker>>(),
                         p.GetRequiredService<SentinelDbContext>(),
                         plugin,
+                        p.GetRequiredService<LibrarianClientService>(),
                         TimeSpan.FromMinutes(systemConfig.LibraryScanIntervalMinutes)));
                 }
 
@@ -117,6 +119,10 @@ namespace Sentinel
                         }
                     }
                     dbContext.SaveChanges();
+
+                    // report sentinel info
+                    var librarianClientService = scope.ServiceProvider.GetRequiredService<LibrarianClientService>();
+                    librarianClientService.ReportSentinelInformationAsync().Wait();
                 }
 
                 host.Run();
