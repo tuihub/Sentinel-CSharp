@@ -7,6 +7,9 @@ namespace Sentinel
 {
     public class SentinelDbContext : DbContext
     {
+        public SentinelDbContext() { }
+        public SentinelDbContext(DbContextOptions<SentinelDbContext> options) : base(options) { }
+
         public DbSet<AppBinaryBaseDir> AppBinaryBaseDirs { get; set; } = null!;
         public DbSet<AppBinary> AppBinaries { get; set; } = null!;
 
