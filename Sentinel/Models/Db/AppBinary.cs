@@ -12,7 +12,7 @@ namespace Sentinel.Models.Db
         [MaxLength(4096)]
         public string Path { get; set; } = null!;
         public long SizeBytes { get; set; }
-        public IList<AppBinaryFile> Files { get; set; } = null!;
+        public ICollection<AppBinaryFile> Files { get; set; } = null!;
         public Guid Guid { get; set; }
         // relation
         // one-to-many relation (required, to parent)

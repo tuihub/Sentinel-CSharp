@@ -16,7 +16,7 @@ namespace Sentinel.Models.Db
         [IsFixedLength]
         [MaxLength(32)]
         public byte[] Sha256 { get; set; } = null!;
-        public IList<AppBinaryFileChunk> Chunks { get; set; } = null!;
+        public ICollection<AppBinaryFileChunk> Chunks { get; set; } = null!;
         public DateTime LastWriteUtc { get; set; }
 
         // constructor
