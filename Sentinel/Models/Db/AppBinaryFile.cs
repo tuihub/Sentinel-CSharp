@@ -8,6 +8,8 @@ namespace Sentinel.Models.Db
     [Index(nameof(FilePath))]
     public class AppBinaryFile
     {
+        [Key]
+        public long Id { get; set; }
         [MaxLength(4096)]
         public string FilePath { get; set; } = null!;
         public long SizeBytes { get; set; }

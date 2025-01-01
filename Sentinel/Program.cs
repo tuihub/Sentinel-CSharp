@@ -13,6 +13,7 @@ using Sentinel.Plugin.Contracts;
 using Sentinel.Plugin.Options;
 using Sentinel.Services;
 using Sentinel.Workers;
+using System.Text.Json;
 using TuiHub.Protos.Librarian.Sephirah.V1;
 
 namespace Sentinel
@@ -41,10 +42,10 @@ namespace Sentinel
 
                 // get config
                 var systemConfig = builder.Configuration.GetSection("SystemConfig").Get<SystemConfig>()
-                    ?? throw new Exception("Failed to parse SystemConfig");
+                    ?? throw new ArgumentException("Failed to parse SystemConfig");
                 builder.Services.AddSingleton(systemConfig);
                 var sentinelConfig = builder.Configuration.GetSection("SentinelConfig").Get<SentinelConfig>()
-                    ?? throw new Exception("Failed to parse SentinelConfig");
+                    ?? throw new ArgumentException("Failed to parse SentinelConfig");
                 builder.Services.AddSingleton(sentinelConfig);
 
                 // add db context
@@ -75,7 +76,7 @@ namespace Sentinel
                     var pluginName = config.PluginName;
                     var plugin = s_pluginServiceProvider.GetServices<IPlugin>().FirstOrDefault(p => p.Name == pluginName)
                         ?? throw new Exception($"Failed to find plugin with name {pluginName}");
-                    plugin.Config = config.PluginConfig as PluginConfigBase
+                    plugin.ConfigJsonNode = config.PluginConfig
                         ?? throw new Exception($"Failed to parse PluginConfig for {pluginName}");
 
                     // fswatcher not implemented
@@ -107,7 +108,8 @@ namespace Sentinel
                     // init base dirs
                     foreach (var libraryConfig in libraryConfigs)
                     {
-                        var config = (libraryConfig.PluginConfig as PluginConfigBase)!;
+                        var config = JsonSerializer.Deserialize<PluginConfigBase>(libraryConfig.PluginConfig)
+                            ?? throw new ArgumentException("Failed to parse PluginConfig");
                         var path = config.LibraryFolder;
                         if (!dbContext.AppBinaryBaseDirs.Any(d => d.Path == path))
                         {

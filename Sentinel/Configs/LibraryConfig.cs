@@ -1,9 +1,11 @@
-﻿namespace Sentinel.Configs
+﻿using System.Text.Json.Nodes;
+
+namespace Sentinel.Configs
 {
     public class LibraryConfig
     {
         public string PluginName { get; set; } = string.Empty;
         public string DownloadBasePath { get; set; } = string.Empty;
-        public object PluginConfig { get; set; } = null!;
+        public JsonNode PluginConfig { get; set; } = null!;
     }
 }

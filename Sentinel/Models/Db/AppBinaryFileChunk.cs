@@ -6,6 +6,8 @@ namespace Sentinel.Models.Db
 {
     public class AppBinaryFileChunk
     {
+        [Key]
+        public long Id { get; set; }
         public long OffsetBytes { get; set; }
         public long SizeBytes { get; set; }
         [IsFixedLength]

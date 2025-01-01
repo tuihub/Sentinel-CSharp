@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using Sentinel.Configs;
 using Sentinel.Helpers;
-using Sentinel.Plugin.Configs;
 using TuiHub.Protos.Librarian.Sephirah.V1;
 using static TuiHub.Protos.Librarian.Sephirah.V1.LibrarianSephirahService;
 
@@ -40,7 +39,7 @@ namespace Sentinel.Services
                 _systemConfig.LibraryConfigs
                 .Select(x => new ReportSentinelInformationRequest.Types.SentinelLibrary
                 {
-                    Id = _dbContext.AppBinaryBaseDirs.Single(d => d.Path == (x.PluginConfig as PluginConfigBase)!.LibraryFolder).Id,
+                    Id = _dbContext.AppBinaryBaseDirs.Single(d => d.Path == x.PluginConfig["LibraryFolder"]!.GetValue<string>()).Id,
                     DownloadBasePath = x.DownloadBasePath
                 }));
             return await _client.ReportSentinelInformationAsync(request, cancellationToken: ct);
@@ -49,7 +48,7 @@ namespace Sentinel.Services
         public async Task<ReportAppBinariesResponse> ReportAppBinariesAsync(CancellationToken ct = default)
         {
             _logger.LogInformation("Reporting AppBinaries");
-            var libraryPaths = _systemConfig.LibraryConfigs.Select(x => (x.PluginConfig as PluginConfigBase)!.LibraryFolder).ToList();
+            var libraryPaths = _systemConfig.LibraryConfigs.Select(x => x.PluginConfig["LibraryFolder"]!.GetValue<string>()).ToList();
             var sentinelAppBinaries = _dbContext.AppBinaries
                 .Include(x => x.AppBinaryBaseDir)
                 .Where(x => libraryPaths.Contains(x.AppBinaryBaseDir.Path))
