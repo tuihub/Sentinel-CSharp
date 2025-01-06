@@ -1,4 +1,7 @@
-﻿namespace Sentinel.Plugin.Models
+﻿using Sentinel.Plugin.Converters;
+using System.Text.Json.Serialization;
+
+namespace Sentinel.Plugin.Models
 {
     public record FileEntry
     {
@@ -6,6 +9,7 @@
         public long SizeBytes { get; init; }
         public byte[] Sha256 { get; init; }
         public IEnumerable<FileEntryChunk> Chunks { get; init; }
+        [JsonConverter(typeof(PyIsoDateTimeJsonConverter))]
         public DateTime LastWriteUtc { get; init; }
 
         public FileEntry(string filePath, long sizeBytes, byte[] sha256, IEnumerable<FileEntryChunk> chunks, DateTime lastWriteUtc)

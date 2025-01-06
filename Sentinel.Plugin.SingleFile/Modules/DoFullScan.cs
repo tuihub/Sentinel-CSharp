@@ -15,13 +15,13 @@ namespace Sentinel.Plugin.SingleFile
             var filesToAdd = fsFiles.Except(appBinaries.Select(x => x.Files.First().FilePath));
             var appBinariesToRecheck = appBinaries.ExceptBy(filesToRemove, x => x.Path);
 
-            _logger?.LogDebug($"DoFullScanAsync: Files to remove: {string.Join(", ", filesToRemove)}");
+            _logger.LogDebug($"DoFullScanAsync: Files to remove: {string.Join(", ", filesToRemove)}");
             var appBinariesToRemove = appBinaries.Where(x => filesToRemove.Contains(x.Files.First().FilePath)).ToList();
 
             var appBinariesToAdd = new List<AppBinary>(filesToAdd.Count());
             foreach (var file in filesToAdd)
             {
-                _logger?.LogInformation($"DoFullScanAsync: Adding {file}");
+                _logger.LogInformation($"DoFullScanAsync: Adding {file}");
                 var fileEntry = await FileEntryHelper.GetFileEntryAsync(_logger, file, file, Config.ChunkSizeBytes, ct: ct);
                 ct.ThrowIfCancellationRequested();
                 appBinariesToAdd.Add(new AppBinary(file, fileEntry.SizeBytes, [fileEntry]));
@@ -32,7 +32,7 @@ namespace Sentinel.Plugin.SingleFile
             {
                 if (Config.ForceCalcDigest || File.GetLastWriteTimeUtc(appBinary.Path) != appBinary.Files.First().LastWriteUtc)
                 {
-                    _logger?.LogInformation("DoFullScanAsync: Rechecking " + appBinary.Path);
+                    _logger.LogInformation("DoFullScanAsync: Rechecking " + appBinary.Path);
                     var fileEntry = await FileEntryHelper.GetFileEntryAsync(_logger, appBinary.Path, appBinary.Path, Config.ChunkSizeBytes, ct: ct);
                     ct.ThrowIfCancellationRequested();
                     if (fileEntry.Sha256 != appBinary.Files.First().Sha256)
@@ -42,7 +42,7 @@ namespace Sentinel.Plugin.SingleFile
                 }
                 else
                 {
-                    _logger?.LogInformation("DoFullScanAsync: Skipping " + appBinary.Path + " because its LastWriteUtc is not changed.");
+                    _logger.LogInformation("DoFullScanAsync: Skipping " + appBinary.Path + " because its LastWriteUtc is not changed.");
                 }
             }
 

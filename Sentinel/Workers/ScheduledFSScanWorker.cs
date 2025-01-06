@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Sentinel.Helpers;
@@ -10,25 +11,29 @@ namespace Sentinel.Workers
     internal class ScheduledFSScanWorker : BackgroundService
     {
         private readonly ILogger<ScheduledFSScanWorker> _logger;
-        private readonly SentinelDbContext _dbContext;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly IPlugin _plugin;
         private readonly LibrarianClientService _librarianClientService;
         private readonly TimeSpan _scanInterval;
 
         private readonly long _appBinaryBaseDirId;
 
-        public ScheduledFSScanWorker(ILogger<ScheduledFSScanWorker> logger, SentinelDbContext dbContext, IPlugin plugin,
+        public ScheduledFSScanWorker(ILogger<ScheduledFSScanWorker> logger, IServiceScopeFactory serviceScopeFactory, IPlugin plugin,
             LibrarianClientService librarianClientService, TimeSpan scanInterval)
         {
             _logger = logger;
-            _dbContext = dbContext;
+            _serviceScopeFactory = serviceScopeFactory;
             _plugin = plugin;
             _librarianClientService = librarianClientService;
             _scanInterval = scanInterval;
 
-            _appBinaryBaseDirId = _dbContext.AppBinaryBaseDirs
+            using (var scope = _serviceScopeFactory.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<SentinelDbContext>();
+                _appBinaryBaseDirId = dbContext.AppBinaryBaseDirs
                 .Single(x => x.Path == _plugin.Config.LibraryFolder)
                 .Id;
+            }
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -37,22 +42,26 @@ namespace Sentinel.Workers
             {
                 while (true)
                 {
-                    var result = await _plugin.DoFullScanAsync(
-                        _dbContext.AppBinaries
-                        .Include(x => x.AppBinaryBaseDir)
-                        .Where(x => x.AppBinaryBaseDir.Path == _plugin.Config.LibraryFolder)
-                        .Include(x => x.Files)
-                        .ThenInclude(x => x.Chunks)
-                        .Select(x => x.ToPluginModel()),
-                        stoppingToken);
-                    stoppingToken.ThrowIfCancellationRequested();
+                    using (var scope = _serviceScopeFactory.CreateScope())
+                    {
+                        var dbContext = scope.ServiceProvider.GetRequiredService<SentinelDbContext>();
+                        var result = await _plugin.DoFullScanAsync(
+                            dbContext.AppBinaries
+                            .Include(x => x.AppBinaryBaseDir)
+                            .Where(x => x.AppBinaryBaseDir.Path == _plugin.Config.LibraryFolder)
+                            .Include(x => x.Files)
+                            .ThenInclude(x => x.Chunks)
+                            .Select(x => x.ToPluginModel()),
+                            stoppingToken);
+                        stoppingToken.ThrowIfCancellationRequested();
 
-                    await _dbContext.ApplyScanChangeResultsAsync(_logger, result, _appBinaryBaseDirId, stoppingToken);
+                        await dbContext.ApplyScanChangeResultsAsync(_logger, result, _appBinaryBaseDirId, stoppingToken);
 
-                    await _librarianClientService.ReportAppBinariesAsync(stoppingToken);
+                        await _librarianClientService.ReportAppBinariesAsync(stoppingToken);
 
-                    await Task.Delay(_scanInterval, stoppingToken);
-                    stoppingToken.ThrowIfCancellationRequested();
+                        await Task.Delay(_scanInterval, stoppingToken);
+                        stoppingToken.ThrowIfCancellationRequested();
+                    }
                 }
             }
             catch (OperationCanceledException ex)

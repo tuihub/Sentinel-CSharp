@@ -1,15 +1,13 @@
 ﻿using Microsoft.Extensions.Logging;
 using Sentinel.Plugin.Configs;
 using Sentinel.Plugin.Contracts;
-using Sentinel.Plugin.Helpers;
 using Sentinel.Plugin.Options;
 
 namespace Sentinel.Plugin.SingleFile
 {
     public partial class SingleFile : IPlugin
     {
-        private readonly ILogger? _logger;
-        public SingleFile() { }
+        private readonly ILogger _logger;
         public SingleFile(ILogger<SingleFile> logger)
         {
             _logger = logger;

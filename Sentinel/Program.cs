@@ -13,7 +13,6 @@ using Sentinel.Plugin.Contracts;
 using Sentinel.Plugin.Options;
 using Sentinel.Services;
 using Sentinel.Workers;
-using System.Text.Json;
 using TuiHub.Protos.Librarian.Sephirah.V1;
 
 namespace Sentinel
@@ -38,7 +37,7 @@ namespace Sentinel
             {
                 var builder = Host.CreateApplicationBuilder(args);
 
-                var pluginServices = new ServiceCollection();
+                var pluginServices = Host.CreateApplicationBuilder(args).Services;
 
                 // get config
                 var systemConfig = builder.Configuration.GetSection("SystemConfig").Get<SystemConfig>()
@@ -51,20 +50,23 @@ namespace Sentinel
                 // add db context
                 builder.Services.AddDbContext<SentinelDbContext>(o => o.UseSqlite($"Data Source={systemConfig.DbPath}"));
 
-                // add token service
+                // add state service
                 builder.Services.AddSingleton<StateService>();
 
                 // add grpc services
                 builder.Services.AddSingleton<ClientTokenInterceptor>();
+                builder.Services.AddSingleton<LoggingInterceptor>();
                 builder.Services.AddGrpcClient<LibrarianSephirahService.LibrarianSephirahServiceClient>(o =>
                     {
                         o.Address = new Uri(systemConfig.LibrarianUrl);
                     })
                     .AddInterceptor<ClientTokenInterceptor>();
+                    //.AddInterceptor<LoggingInterceptor>();
                 builder.Services.AddSingleton<LibrarianClientService>();
 
                 // load built-in plugins
                 pluginServices.AddTransient<IPlugin, Plugin.SingleFile.SingleFile>();
+                pluginServices.AddTransient<IPlugin, Plugin.PythonPluginLoader.PythonPluginLoader>();
 
                 // load plugins
                 PluginHelper.LoadPlugins(s_logger, pluginServices, systemConfig.PluginBaseDir);
@@ -77,7 +79,7 @@ namespace Sentinel
                     var pluginName = config.PluginName;
                     var plugin = s_pluginServiceProvider.GetServices<IPlugin>().FirstOrDefault(p => p.Name == pluginName)
                         ?? throw new Exception($"Failed to find plugin with name {pluginName}");
-                    plugin.ConfigJsonNode = config.PluginConfig
+                    plugin.ConfigObj = config.PluginConfig.Get(plugin.Config.GetType()) as PluginConfigBase
                         ?? throw new Exception($"Failed to parse PluginConfig for {pluginName}");
 
                     // fswatcher not implemented
@@ -92,7 +94,7 @@ namespace Sentinel
 
                     builder.Services.AddHostedService<ScheduledFSScanWorker>(p => new ScheduledFSScanWorker(
                         p.GetRequiredService<ILogger<ScheduledFSScanWorker>>(),
-                        p.GetRequiredService<SentinelDbContext>(),
+                        p.GetRequiredService<IServiceScopeFactory>(),
                         plugin,
                         p.GetRequiredService<LibrarianClientService>(),
                         TimeSpan.FromMinutes(systemConfig.LibraryScanIntervalMinutes)));
@@ -109,7 +111,7 @@ namespace Sentinel
                     // init base dirs
                     foreach (var libraryConfig in libraryConfigs)
                     {
-                        var config = JsonSerializer.Deserialize<PluginConfigBase>(libraryConfig.PluginConfig)
+                        var config = libraryConfig.PluginConfig.Get<PluginConfigBase>()
                             ?? throw new ArgumentException("Failed to parse PluginConfig");
                         var path = config.LibraryFolder;
                         if (!dbContext.AppBinaryBaseDirs.Any(d => d.Path == path))

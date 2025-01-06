@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Nodes;
+﻿using Microsoft.Extensions.Configuration;
 
 namespace Sentinel.Configs
 {
@@ -6,6 +6,6 @@ namespace Sentinel.Configs
     {
         public string PluginName { get; set; } = string.Empty;
         public string DownloadBasePath { get; set; } = string.Empty;
-        public JsonNode PluginConfig { get; set; } = null!;
+        public IConfigurationSection PluginConfig { get; set; } = null!;
     }
 }
