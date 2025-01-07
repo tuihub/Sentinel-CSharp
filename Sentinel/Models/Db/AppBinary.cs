@@ -9,6 +9,8 @@ namespace Sentinel.Models.Db
     {
         [Key]
         public long Id { get; set; }
+        [MaxLength(512)]
+        public string Name { get; set; } = null!;
         [MaxLength(4096)]
         public string Path { get; set; } = null!;
         public long SizeBytes { get; set; }
@@ -23,6 +25,7 @@ namespace Sentinel.Models.Db
         public AppBinary() { }
         public AppBinary(Plugin.Models.AppBinary pluginAppBinary, long appBinaryBaseDirId)
         {
+            Name = pluginAppBinary.Name;
             Path = pluginAppBinary.Path;
             SizeBytes = pluginAppBinary.SizeBytes;
             Files = pluginAppBinary.Files.Select(x => new AppBinaryFile(x)).ToList();
@@ -33,13 +36,13 @@ namespace Sentinel.Models.Db
         // function
         public Plugin.Models.AppBinary ToPluginModel()
         {
-            return new Plugin.Models.AppBinary(Path, SizeBytes, Files.Select(x => x.ToPluginModel()), Guid);
+            return new Plugin.Models.AppBinary(Name, Path, SizeBytes, Files.Select(x => x.ToPluginModel()), Guid);
         }
         public TuiHub.Protos.Librarian.Sephirah.V1.AppBinary ToProto(bool needToken)
         {
             return new TuiHub.Protos.Librarian.Sephirah.V1.AppBinary
             {
-                Name = Path,
+                Name = Name,
                 SizeBytes = SizeBytes,
                 NeedToken = needToken,
                 Files = { Files.Select(x => x.ToProto()) }

@@ -7,7 +7,8 @@ namespace Sentinel.Plugin.SingleFile
 {
     public partial class SingleFile : IPlugin
     {
-        private readonly ILogger _logger;
+        private readonly ILogger? _logger;
+        public SingleFile() { }
         public SingleFile(ILogger<SingleFile> logger)
         {
             _logger = logger;

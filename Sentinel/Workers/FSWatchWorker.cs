@@ -91,8 +91,8 @@ namespace Sentinel.Workers
                 var appBinary = await _dbContext.AppBinaries
                     .Include(x => x.Files)
                     .ThenInclude(x => x.Chunks)
-                    .SingleOrDefaultAsync(x => x.Files.Any(y => y.FilePath == fileRemoved), ct);
-                appBinary?.Files.Remove(appBinary.Files.Single(x => x.FilePath == fileRemoved));
+                    .SingleOrDefaultAsync(x => x.Files.Any(y => y.Path == fileRemoved), ct);
+                appBinary?.Files.Remove(appBinary.Files.Single(x => x.Path == fileRemoved));
                 if (appBinary?.Files.Count == 0)
                 {
                     _dbContext.AppBinaries.Remove(appBinary);
@@ -119,11 +119,11 @@ namespace Sentinel.Workers
                 var appBinary = await _dbContext.AppBinaries
                     .Include(x => x.Files)
                     .ThenInclude(x => x.Chunks)
-                    .SingleOrDefaultAsync(x => x.Files.Any(y => y.FilePath == fileChangedOldPath), ct);
-                var file = appBinary?.Files.SingleOrDefault(x => x.FilePath == fileChangedOldPath);
+                    .SingleOrDefaultAsync(x => x.Files.Any(y => y.Path == fileChangedOldPath), ct);
+                var file = appBinary?.Files.SingleOrDefault(x => x.Path == fileChangedOldPath);
                 if (file != null)
                 {
-                    file.FilePath = fileChangedNewPath;
+                    file.Path = fileChangedNewPath;
                     await _dbContext.SaveChangesAsync(ct);
                 }
             }

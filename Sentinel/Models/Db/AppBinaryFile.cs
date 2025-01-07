@@ -5,13 +5,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Sentinel.Models.Db
 {
-    [Index(nameof(FilePath))]
+    [Index(nameof(Path))]
     public class AppBinaryFile
     {
         [Key]
         public long Id { get; set; }
         [MaxLength(4096)]
-        public string FilePath { get; set; } = null!;
+        public string Path { get; set; } = null!;
         public long SizeBytes { get; set; }
         [IsFixedLength]
         [MaxLength(32)]
@@ -23,7 +23,7 @@ namespace Sentinel.Models.Db
         public AppBinaryFile() { }
         public AppBinaryFile(Plugin.Models.FileEntry pluginFileEntry)
         {
-            FilePath = pluginFileEntry.FilePath;
+            Path = pluginFileEntry.Path;
             SizeBytes = pluginFileEntry.SizeBytes;
             Sha256 = pluginFileEntry.Sha256;
             Chunks = pluginFileEntry.Chunks.Select(x => new AppBinaryFileChunk(x)).ToList();
@@ -33,16 +33,16 @@ namespace Sentinel.Models.Db
         // function
         public Plugin.Models.FileEntry ToPluginModel()
         {
-            return new Plugin.Models.FileEntry(FilePath, SizeBytes, Sha256, Chunks.Select(x => x.ToPluginModel()), LastWriteUtc);
+            return new Plugin.Models.FileEntry(Path, SizeBytes, Sha256, Chunks.Select(x => x.ToPluginModel()), LastWriteUtc);
         }
         public TuiHub.Protos.Librarian.Sephirah.V1.AppBinaryFile ToProto()
         {
             return new TuiHub.Protos.Librarian.Sephirah.V1.AppBinaryFile
             {
-                Name = Path.GetFileName(FilePath),
+                Name = System.IO.Path.GetFileName(Path),
                 SizeBytes = SizeBytes,
                 Sha256 = UnsafeByteOperations.UnsafeWrap(Sha256.AsMemory()),
-                ServerFilePath = FilePath,
+                ServerFilePath = Path,
                 Chunks = { Chunks.Select(x => x.ToProto()) }
             };
         }

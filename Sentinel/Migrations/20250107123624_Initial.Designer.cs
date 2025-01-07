@@ -11,7 +11,7 @@ using Sentinel;
 namespace Sentinel.Migrations
 {
     [DbContext(typeof(SentinelDbContext))]
-    [Migration("20250101042407_Initial")]
+    [Migration("20250107123624_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -30,6 +30,11 @@ namespace Sentinel.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid>("Guid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(512)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Path")
@@ -82,12 +87,12 @@ namespace Sentinel.Migrations
                     b.Property<long?>("AppBinaryId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("FilePath")
-                        .IsRequired()
-                        .HasMaxLength(4096)
+                    b.Property<DateTime>("LastWriteUtc")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("LastWriteUtc")
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasMaxLength(4096)
                         .HasColumnType("TEXT");
 
                     b.Property<byte[]>("Sha256")
@@ -103,7 +108,7 @@ namespace Sentinel.Migrations
 
                     b.HasIndex("AppBinaryId");
 
-                    b.HasIndex("FilePath");
+                    b.HasIndex("Path");
 
                     b.ToTable("AppBinaryFile");
                 });

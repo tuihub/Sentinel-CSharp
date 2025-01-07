@@ -31,6 +31,7 @@ namespace Sentinel.Migrations
                 {
                     Id = table.Column<long>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 512, nullable: false),
                     Path = table.Column<string>(type: "TEXT", maxLength: 4096, nullable: false),
                     SizeBytes = table.Column<long>(type: "INTEGER", nullable: false),
                     Guid = table.Column<Guid>(type: "TEXT", nullable: false),
@@ -53,7 +54,7 @@ namespace Sentinel.Migrations
                 {
                     Id = table.Column<long>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    FilePath = table.Column<string>(type: "TEXT", maxLength: 4096, nullable: false),
+                    Path = table.Column<string>(type: "TEXT", maxLength: 4096, nullable: false),
                     SizeBytes = table.Column<long>(type: "INTEGER", nullable: false),
                     Sha256 = table.Column<byte[]>(type: "BLOB", fixedLength: true, maxLength: 32, nullable: false),
                     LastWriteUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
@@ -117,9 +118,9 @@ namespace Sentinel.Migrations
                 column: "AppBinaryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AppBinaryFile_FilePath",
+                name: "IX_AppBinaryFile_Path",
                 table: "AppBinaryFile",
-                column: "FilePath");
+                column: "Path");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AppBinaryFileChunk_AppBinaryFileId",
