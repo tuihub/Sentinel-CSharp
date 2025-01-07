@@ -4,8 +4,8 @@ namespace Sentinel.Plugin.PythonPluginLoader
 {
     public class Config : PluginConfigBase
     {
-        public string PythonScriptPath { get; set; } = string.Empty;
-        public string PythonClassName { get; set; } = string.Empty;
-        public Dictionary<string, string> ScriptConfig { get; set; } = new Dictionary<string, string>();
+        public string PythonScriptPath { get; set; } = null!;
+        public string PythonClassName { get; set; } = "Plugin";
+        public Dictionary<string, string> PythonScriptCustomConfig { get; set; } = new Dictionary<string, string>();
     }
 }

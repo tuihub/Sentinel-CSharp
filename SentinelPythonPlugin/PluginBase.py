@@ -79,7 +79,7 @@ class PluginBase:
         self.library_folder: str = config.LibraryFolder
         self.chunk_size_bytes: int = config.ChunkSizeBytes
         self.force_calc_digest: bool = config.ForceCalcDigest
-        self.custom_config: dict = config.ScriptConfig
+        self.custom_config: dict = config.PythonScriptCustomConfig
 
     def _get_file_entry(self, file_full_path: str, base_path: str, calc_sha256: bool = True,
                         buffer_size_bytes: int = 8192) -> FileEntry:
