@@ -59,8 +59,8 @@ namespace Sentinel
                     {
                         o.Address = new Uri(systemConfig.LibrarianUrl);
                     })
-                    .AddInterceptor<ClientTokenInterceptor>();
-                    //.AddInterceptor<LoggingInterceptor>();
+                .AddInterceptor<ClientTokenInterceptor>();
+                //.AddInterceptor<LoggingInterceptor>();
                 builder.Services.AddSingleton<LibrarianClientService>();
 
                 // load built-in plugins
@@ -122,6 +122,20 @@ namespace Sentinel
                     var librarianClientService = scope.ServiceProvider.GetRequiredService<LibrarianClientService>();
                     librarianClientService.ReportSentinelInformationAsync().Wait();
                 }
+
+                var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
+                lifetime.ApplicationStopped.Register(() =>
+                {
+                    s_logger.LogInformation("Host is stopped.");
+                    
+                    if (libraryConfigs.Any(x => x.PluginName == "PythonPluginLoader"))
+                    {
+                        var timeout = TimeSpan.FromSeconds(10);
+                        s_logger.LogInformation($"Python plugin loader detected, forcing close in {timeout.TotalSeconds:F2} seconds.");
+                        Task.Delay(timeout).Wait();
+                        Process.GetCurrentProcess().Kill();
+                    }
+                });
 
                 host.Run();
             }
