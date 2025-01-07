@@ -7,7 +7,12 @@ namespace Sentinel.Plugin.Converters
     {
         public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            return DateTime.Parse(reader.GetString()!);
+            var dt = DateTime.Parse(reader.GetString()!);
+            if (dt.Kind == DateTimeKind.Unspecified)
+            {
+                dt = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+            }
+            return dt;
         }
 
         public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
