@@ -33,7 +33,7 @@ namespace Sentinel.Models.Db
         // function
         public Plugin.Models.AppBinary ToPluginModel()
         {
-            return new Plugin.Models.AppBinary(Path, SizeBytes, Files.Select(x => x.ToPluginModel()));
+            return new Plugin.Models.AppBinary(Path, SizeBytes, Files.Select(x => x.ToPluginModel()), Guid);
         }
         public TuiHub.Protos.Librarian.Sephirah.V1.AppBinary ToProto(bool needToken)
         {

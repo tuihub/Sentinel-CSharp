@@ -24,7 +24,7 @@ namespace Sentinel.Plugin.SingleFile
                 _logger.LogInformation($"DoFullScanAsync: Adding {file}");
                 var fileEntry = await FileEntryHelper.GetFileEntryAsync(_logger, file, file, Config.ChunkSizeBytes, ct: ct);
                 ct.ThrowIfCancellationRequested();
-                appBinariesToAdd.Add(new AppBinary(file, fileEntry.SizeBytes, [fileEntry]));
+                appBinariesToAdd.Add(new AppBinary(file, fileEntry.SizeBytes, [fileEntry], Guid.NewGuid()));
             }
 
             var appBinariesToUpdate = new List<AppBinary>();
@@ -37,7 +37,7 @@ namespace Sentinel.Plugin.SingleFile
                     ct.ThrowIfCancellationRequested();
                     if (fileEntry.Sha256 != appBinary.Files.First().Sha256)
                     {
-                        appBinariesToUpdate.Add(new AppBinary(appBinary.Path, fileEntry.SizeBytes, [fileEntry]));
+                        appBinariesToUpdate.Add(new AppBinary(appBinary.Path, fileEntry.SizeBytes, [fileEntry], Guid.NewGuid()));
                     }
                 }
                 else

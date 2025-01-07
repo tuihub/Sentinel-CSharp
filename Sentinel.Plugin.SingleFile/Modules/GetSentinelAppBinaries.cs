@@ -24,7 +24,7 @@ namespace Sentinel.Plugin.SingleFile
                 {
                     _logger.LogInformation($"Processing {filePath}");
                     var fileEntry = FileEntryHelper.GetFileEntry(_logger, filePath, filePath, options.ChunkSizeBytes, !options.DryRun);
-                    appBinaries.Add(new AppBinary(filePath, fileEntry.SizeBytes, [fileEntry]));
+                    appBinaries.Add(new AppBinary(filePath, fileEntry.SizeBytes, [fileEntry], Guid.NewGuid()));
                 }
                 catch (Exception ex)
                 {
