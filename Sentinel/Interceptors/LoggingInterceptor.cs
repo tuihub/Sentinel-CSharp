@@ -16,7 +16,8 @@ namespace Sentinel.Interceptors
         public override AsyncUnaryCall<TResponse> AsyncUnaryCall<TRequest, TResponse>(TRequest request, ClientInterceptorContext<TRequest, TResponse> context,
             AsyncUnaryCallContinuation<TRequest, TResponse> continuation)
         {
-            _logger.LogInformation($"Request Headers: {context.Options}");
+            _logger.LogInformation($"Request Headers: {context.Options.Headers}");
+            _logger.LogInformation($"Request Type: {typeof(TRequest)}");
             _logger.LogInformation($"Request: {request}");
 
             var emptyResponse = Activator.CreateInstance<TResponse>();
