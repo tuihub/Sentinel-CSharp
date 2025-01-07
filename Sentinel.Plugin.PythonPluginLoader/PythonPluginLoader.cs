@@ -14,8 +14,12 @@ namespace Sentinel.Plugin.PythonPluginLoader
             PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
         };
 
-        private readonly ILogger _logger;
+        private readonly ILogger? _logger;
 
+        public PythonPluginLoader()
+        {
+            InitializePython();
+        }
         public PythonPluginLoader(ILogger<PythonPluginLoader> logger)
         {
             _logger = logger;

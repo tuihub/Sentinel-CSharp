@@ -70,15 +70,17 @@ namespace Sentinel.Plugin.PythonPluginLoader {
         ///import uuid
         ///
         ///
-        ///class PluginBase:
-        ///    def __init__(self, config):
-        ///        self.library_name = config.LibraryName
-        ///        self.library_folder = config.LibraryFolder
-        ///        self.chunk_size_bytes = config.ChunkSizeBytes
-        ///        self.force_calc_digest = config.ForceCalcDigest
-        ///        self.custom_config = config.ScriptConfig
+        ///class FileEntryChunk:
+        ///    def __init__(self, offset_bytes: int, size_bytes: int, sha256: bytes):
+        ///        self.offset_bytes: int = offset_bytes
+        ///        self.size_bytes: int = size_bytes
+        ///        self.sha256: bytes = sha256
         ///
-        ///    def _get_file_entry(self, file_full_path, base_path, calc_sha256=True, buffer_size_bytes=8 [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        ///    def to_dict(self) -&gt; dict:
+        ///        return {
+        ///            &apos;offset_bytes&apos;: self.offset_bytes,
+        ///            &apos;size_bytes&apos;: self.size_bytes,
+        ///            &apos;sha256&apos;: base64.b64encode(s [字符串的其余部分被截断]&quot;; 的本地化字符串。
         /// </summary>
         internal static string PluginBase {
             get {

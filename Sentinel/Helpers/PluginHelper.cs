@@ -54,12 +54,19 @@ namespace Sentinel.Helpers
         {
             foreach (Type type in assembly.GetTypes())
             {
-                if (typeof(IPlugin).IsAssignableFrom(type))
+                if (typeof(IPlugin).IsAssignableFrom(type) && !type.IsAbstract && !type.IsInterface)
                 {
                     try
                     {
-                        services.AddTransient(typeof(IPlugin), type);
-                        logger?.LogInformation($"Loaded IPlugin {type} from {assembly.FullName}");
+                        if (Activator.CreateInstance(type) is IPlugin plugin)
+                        {
+                            services.AddKeyedTransient(typeof(IPlugin), plugin.Name, type);
+                            logger?.LogInformation($"Loaded IPlugin {plugin.Name} ({type}) from {assembly.FullName}");
+                        }
+                        else
+                        {
+                            logger?.LogWarning($"Failed to create an instance of IPlugin: {type.FullName}");
+                        }
                     }
                     catch (Exception ex)
                     {

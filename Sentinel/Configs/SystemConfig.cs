@@ -7,6 +7,6 @@
         public string DbPath { get; set; } = "./sentinel.db";
         public string PluginBaseDir { get; set; } = "./plugins";
         public IList<LibraryConfig> LibraryConfigs { get; set; } = new List<LibraryConfig>();
-        public long LibraryScanIntervalMinutes { get; set; } = 1440;
+        public double LibraryScanIntervalMinutes { get; set; } = 1440;
     }
 }

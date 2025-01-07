@@ -13,13 +13,14 @@ using Sentinel.Plugin.Contracts;
 using Sentinel.Plugin.Options;
 using Sentinel.Services;
 using Sentinel.Workers;
+using System.Diagnostics;
 using TuiHub.Protos.Librarian.Sephirah.V1;
 
 namespace Sentinel
 {
     class Program
     {
-        private static IServiceProvider s_pluginServiceProvider = null!;
+        private static ServiceProvider s_pluginServiceProvider = null!;
         private static IEnumerable<IPlugin> s_plugins = null!;
         private static ILogger s_logger = null!;
 
@@ -36,8 +37,6 @@ namespace Sentinel
             if (args.Any(x => x == "daemon" || x == "d"))
             {
                 var builder = Host.CreateApplicationBuilder(args);
-
-                var pluginServices = Host.CreateApplicationBuilder(args).Services;
 
                 // get config
                 var systemConfig = builder.Configuration.GetSection("SystemConfig").Get<SystemConfig>()
@@ -65,23 +64,16 @@ namespace Sentinel
                 builder.Services.AddSingleton<LibrarianClientService>();
 
                 // load built-in plugins
-                pluginServices.AddTransient<IPlugin, Plugin.SingleFile.SingleFile>();
-                pluginServices.AddTransient<IPlugin, Plugin.PythonPluginLoader.PythonPluginLoader>();
+                //builder.Services.AddKeyedTransient<IPlugin, Plugin.SingleFile.SingleFile>("SingleFile");
+                builder.Services.AddKeyedTransient<IPlugin, Plugin.PythonPluginLoader.PythonPluginLoader>("PythonPluginLoader");
 
                 // load plugins
-                PluginHelper.LoadPlugins(s_logger, pluginServices, systemConfig.PluginBaseDir);
+                PluginHelper.LoadPlugins(s_logger, builder.Services, systemConfig.PluginBaseDir);
 
                 // load config & register worker
                 var libraryConfigs = systemConfig.LibraryConfigs;
-                s_pluginServiceProvider = pluginServices.BuildServiceProvider();
                 foreach (var config in libraryConfigs)
                 {
-                    var pluginName = config.PluginName;
-                    var plugin = s_pluginServiceProvider.GetServices<IPlugin>().FirstOrDefault(p => p.Name == pluginName)
-                        ?? throw new Exception($"Failed to find plugin with name {pluginName}");
-                    plugin.ConfigObj = config.PluginConfig.Get(plugin.Config.GetType()) as PluginConfigBase
-                        ?? throw new Exception($"Failed to parse PluginConfig for {pluginName}");
-
                     // fswatcher not implemented
                     //builder.Services.AddHostedService<FSWatchWorker>(p => new FSWatchWorker(
                     //    p.GetRequiredService<ILogger<FSWatchWorker>>(),
@@ -95,7 +87,8 @@ namespace Sentinel
                     builder.Services.AddHostedService<ScheduledFSScanWorker>(p => new ScheduledFSScanWorker(
                         p.GetRequiredService<ILogger<ScheduledFSScanWorker>>(),
                         p.GetRequiredService<IServiceScopeFactory>(),
-                        plugin,
+                        p.GetRequiredKeyedService<IPlugin>(config.PluginName),
+                        config.PluginConfig,
                         p.GetRequiredService<LibrarianClientService>(),
                         TimeSpan.FromMinutes(systemConfig.LibraryScanIntervalMinutes)));
                 }
@@ -141,7 +134,10 @@ namespace Sentinel
                 if (pluginBaseDirIndex == -1) { pluginBaseDir = "./plugins"; }
                 else
                 {
-                    if (argsList.Count < pluginBaseDirIndex + 2) { throw new Exception("Missing plugin base dir"); }
+                    if (argsList.Count < pluginBaseDirIndex + 2)
+                    {
+                        throw new Exception("Missing plugin base dir");
+                    }
                     pluginBaseDir = argsList[pluginBaseDirIndex + 1];
                     if (pluginBaseDir.StartsWith('-')) { throw new Exception("Missing plugin base dir"); }
                     argsList.RemoveRange(pluginBaseDirIndex, 2);

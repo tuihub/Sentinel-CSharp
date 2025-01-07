@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Sentinel.Helpers;
+using Sentinel.Plugin.Configs;
 using Sentinel.Plugin.Contracts;
 using Sentinel.Services;
 
@@ -19,11 +21,13 @@ namespace Sentinel.Workers
         private readonly long _appBinaryBaseDirId;
 
         public ScheduledFSScanWorker(ILogger<ScheduledFSScanWorker> logger, IServiceScopeFactory serviceScopeFactory, IPlugin plugin,
-            LibrarianClientService librarianClientService, TimeSpan scanInterval)
+            IConfigurationSection pluginConfigSection, LibrarianClientService librarianClientService, TimeSpan scanInterval)
         {
             _logger = logger;
             _serviceScopeFactory = serviceScopeFactory;
             _plugin = plugin;
+            _plugin.ConfigObj = pluginConfigSection.Get(plugin.Config.GetType()) as PluginConfigBase
+                ?? throw new Exception($"Failed to parse PluginConfig for {plugin.Name}");
             _librarianClientService = librarianClientService;
             _scanInterval = scanInterval;
 
@@ -31,8 +35,8 @@ namespace Sentinel.Workers
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<SentinelDbContext>();
                 _appBinaryBaseDirId = dbContext.AppBinaryBaseDirs
-                .Single(x => x.Path == _plugin.Config.LibraryFolder)
-                .Id;
+                    .Single(x => x.Path == _plugin.Config.LibraryFolder)
+                    .Id;
             }
         }
 
@@ -40,11 +44,11 @@ namespace Sentinel.Workers
         {
             try
             {
-                while (true)
+                while (!stoppingToken.IsCancellationRequested)
                 {
                     using (var scope = _serviceScopeFactory.CreateScope())
                     {
-                        var dbContext = scope.ServiceProvider.GetRequiredService<SentinelDbContext>();
+                        using var dbContext = scope.ServiceProvider.GetRequiredService<SentinelDbContext>();
                         var result = await _plugin.DoFullScanAsync(
                             dbContext.AppBinaries
                             .Include(x => x.AppBinaryBaseDir)
@@ -66,8 +70,10 @@ namespace Sentinel.Workers
             }
             catch (OperationCanceledException ex)
             {
-                _logger.LogInformation(ex, "ScheduledFSScanWorker is stopping.");
+                _logger.LogWarning(ex, $"ScheduledFSScanWorker[{_plugin.Name}, {_plugin.Config.LibraryName}] is stopping.");
             }
+
+            _logger.LogInformation($"ScheduledFSScanWorker[{_plugin.Name}, {_plugin.Config.LibraryName}] has stopped.");
         }
     }
 }

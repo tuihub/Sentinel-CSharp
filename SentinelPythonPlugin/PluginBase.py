@@ -7,15 +7,82 @@ import os
 import uuid
 
 
+class FileEntryChunk:
+    def __init__(self, offset_bytes: int, size_bytes: int, sha256: bytes):
+        self.offset_bytes: int = offset_bytes
+        self.size_bytes: int = size_bytes
+        self.sha256: bytes = sha256
+
+    def to_dict(self) -> dict:
+        return {
+            'offset_bytes': self.offset_bytes,
+            'size_bytes': self.size_bytes,
+            'sha256': base64.b64encode(self.sha256).decode('ascii')
+        }
+
+
+class FileEntry:
+    def __init__(self, path: str, size_bytes: int, sha256: bytes, chunks: list[FileEntryChunk],
+                 last_write_utc: datetime.datetime):
+        self.path: str = path
+        self.size_bytes: int = size_bytes
+        self.sha256: bytes = sha256
+        self.chunks: list[FileEntryChunk] = chunks
+        self.last_write_utc: datetime.datetime = last_write_utc
+
+    def to_dict(self) -> dict:
+        return {
+            'path': self.path,
+            'size_bytes': self.size_bytes,
+            'sha256': base64.b64encode(self.sha256).decode('ascii'),
+            'chunks': [c.to_dict() for c in self.chunks],
+            'last_write_utc': self.last_write_utc.isoformat().replace('+00:00', 'Z')
+        }
+
+
+class AppBinary:
+    def __init__(self, name: str, path: str, size_bytes: int, files: list[FileEntry], guid: uuid.UUID):
+        self.name: str = name
+        self.path: str = path
+        self.size_bytes: int = size_bytes
+        self.files: list[FileEntry] = files
+        self.guid: uuid.UUID = guid
+
+    def to_dict(self) -> dict:
+        return {
+            'name': self.name,
+            'path': self.path,
+            'size_bytes': self.size_bytes,
+            'files': [f.to_dict() for f in self.files],
+            'guid': str(self.guid)
+        }
+
+
+class ScanChangeResult:
+    def __init__(self, app_binaries_to_remove: list[AppBinary], app_binaries_to_add: list[AppBinary],
+                 app_binaries_to_update: list[AppBinary]):
+        self.app_binaries_to_remove: list[AppBinary] = app_binaries_to_remove
+        self.app_binaries_to_add: list[AppBinary] = app_binaries_to_add
+        self.app_binaries_to_update: list[AppBinary] = app_binaries_to_update
+
+    def to_dict(self) -> dict:
+        return {
+            'app_binaries_to_remove': [b.to_dict() for b in self.app_binaries_to_remove],
+            'app_binaries_to_add': [b.to_dict() for b in self.app_binaries_to_add],
+            'app_binaries_to_update': [b.to_dict() for b in self.app_binaries_to_update]
+        }
+
+
 class PluginBase:
     def __init__(self, config):
-        self.library_name = config.LibraryName
-        self.library_folder = config.LibraryFolder
-        self.chunk_size_bytes = config.ChunkSizeBytes
-        self.force_calc_digest = config.ForceCalcDigest
-        self.custom_config = config.ScriptConfig
+        self.library_name: str = config.LibraryName
+        self.library_folder: str = config.LibraryFolder
+        self.chunk_size_bytes: int = config.ChunkSizeBytes
+        self.force_calc_digest: bool = config.ForceCalcDigest
+        self.custom_config: dict = config.ScriptConfig
 
-    def _get_file_entry(self, file_full_path, base_path, calc_sha256=True, buffer_size_bytes=8192):
+    def _get_file_entry(self, file_full_path: str, base_path: str, calc_sha256: bool = True,
+                        buffer_size_bytes: int = 8192) -> FileEntry:
         file_size = os.path.getsize(file_full_path)
         if self.chunk_size_bytes % buffer_size_bytes != 0:
             raise ValueError("Chunk size must be a multiple of buffer size.")
@@ -58,10 +125,11 @@ class PluginBase:
         relative_path = os.path.relpath(file_full_path, base_path)
         return FileEntry(relative_path, file_size, file_hash, chunks, last_write_utc)
 
-    def _deserialize_app_binaries(self, app_binaries_json):
-        return [AppBinary(x['path'],
+    def _deserialize_app_binaries(self, app_binaries_json: str) -> list[AppBinary]:
+        return [AppBinary(x['name'],
+                          x['path'],
                           x['size_bytes'],
-                          [FileEntry(f['file_path'],
+                          [FileEntry(f['path'],
                                      f['size_bytes'],
                                      base64.b64decode(f['sha256']),
                                      [FileEntryChunk(c['offset_bytes'],
@@ -72,65 +140,3 @@ class PluginBase:
                            for f in x['files']],
                           uuid.UUID(x['guid']))
                 for x in json.loads(app_binaries_json)]
-
-
-class AppBinary:
-    def __init__(self, path, size_bytes, files, guid):
-        self.path = path
-        self.size_bytes = size_bytes
-        self.files = files
-        self.guid = guid
-
-    def to_dict(self):
-        return {
-            'path': self.path,
-            'size_bytes': self.size_bytes,
-            'files': [f.to_dict() for f in self.files],
-            'guid': str(self.guid)
-        }
-
-
-class FileEntry:
-    def __init__(self, file_path, size_bytes, sha256, chunks, last_write_utc):
-        self.file_path = file_path
-        self.size_bytes = size_bytes
-        self.sha256 = sha256
-        self.chunks = chunks
-        self.last_write_utc = last_write_utc
-
-    def to_dict(self):
-        return {
-            'file_path': self.file_path,
-            'size_bytes': self.size_bytes,
-            'sha256': base64.b64encode(self.sha256).decode('ascii'),
-            'chunks': [c.to_dict() for c in self.chunks],
-            'last_write_utc': self.last_write_utc.isoformat().replace('+00:00', 'Z')
-        }
-
-
-class FileEntryChunk:
-    def __init__(self, offset_bytes, size_bytes, sha256):
-        self.offset_bytes = offset_bytes
-        self.size_bytes = size_bytes
-        self.sha256 = sha256
-
-    def to_dict(self):
-        return {
-            'offset_bytes': self.offset_bytes,
-            'size_bytes': self.size_bytes,
-            'sha256': base64.b64encode(self.sha256).decode('ascii')
-        }
-
-
-class ScanChangeResult:
-    def __init__(self, app_binaries_to_remove, app_binaries_to_add, app_binaries_to_update):
-        self.app_binaries_to_remove = app_binaries_to_remove
-        self.app_binaries_to_add = app_binaries_to_add
-        self.app_binaries_to_update = app_binaries_to_update
-
-    def to_dict(self):
-        return {
-            'app_binaries_to_remove': [b.to_dict() for b in self.app_binaries_to_remove],
-            'app_binaries_to_add': [b.to_dict() for b in self.app_binaries_to_add],
-            'app_binaries_to_update': [b.to_dict() for b in self.app_binaries_to_update]
-        }
