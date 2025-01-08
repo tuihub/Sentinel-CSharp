@@ -20,17 +20,19 @@ namespace Sentinel.Plugin.PythonPluginLoader
             }
         }
 
-        private void DeinitializePython()
+        private void ShutdownPython()
         {
             if (PythonEngine.IsInitialized)
             {
-                _logger?.LogInformation("Deinitializing Python engine.");
+                _logger?.LogInformation("Shutting down Python engine.");
+                var stopWatch = System.Diagnostics.Stopwatch.StartNew();
                 PythonEngine.Shutdown();
-                _logger?.LogInformation("Python engine deinitialized.");
+                stopWatch.Stop();
+                _logger?.LogInformation($"Python engine shut down, elapsed time: {stopWatch.Elapsed}.");
             }
             else
             {
-                _logger?.LogInformation("Python engine is already deinitialized.");
+                _logger?.LogInformation("Python engine is already shut down.");
             }
         }
     }

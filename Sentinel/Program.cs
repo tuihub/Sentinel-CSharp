@@ -54,13 +54,13 @@ namespace Sentinel
 
                 // add grpc services
                 builder.Services.AddSingleton<ClientTokenInterceptor>();
-                builder.Services.AddSingleton<LoggingInterceptor>();
+                builder.Services.AddSingleton<LoggingOnlyInterceptor>();
                 builder.Services.AddGrpcClient<LibrarianSephirahService.LibrarianSephirahServiceClient>(o =>
                     {
                         o.Address = new Uri(systemConfig.LibrarianUrl);
                     })
                 .AddInterceptor<ClientTokenInterceptor>();
-                //.AddInterceptor<LoggingInterceptor>();
+                //.AddInterceptor<LoggingOnlyInterceptor>();
                 builder.Services.AddSingleton<LibrarianClientService>();
 
                 // load built-in plugins
@@ -130,10 +130,13 @@ namespace Sentinel
                     
                     if (libraryConfigs.Any(x => x.PluginName == "PythonPluginLoader"))
                     {
-                        var timeout = TimeSpan.FromSeconds(10);
-                        s_logger.LogInformation($"Python plugin loader detected, forcing close in {timeout.TotalSeconds:F2} seconds.");
-                        Task.Delay(timeout).Wait();
-                        Process.GetCurrentProcess().Kill();
+                        Task.Run(async () =>
+                        {
+                            var timeout = TimeSpan.FromSeconds(10);
+                            s_logger.LogWarning($"Python plugin loader detected, forcing close in {timeout.TotalSeconds:F2} seconds.");
+                            await Task.Delay(timeout);
+                            Process.GetCurrentProcess().Kill();
+                        });
                     }
                 });
 

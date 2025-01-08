@@ -4,11 +4,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Sentinel.Interceptors
 {
-    public class LoggingInterceptor : Interceptor
+    public class LoggingOnlyInterceptor : Interceptor
     {
-        private readonly ILogger<LoggingInterceptor> _logger;
+        private readonly ILogger<LoggingOnlyInterceptor> _logger;
 
-        public LoggingInterceptor(ILogger<LoggingInterceptor> logger)
+        public LoggingOnlyInterceptor(ILogger<LoggingOnlyInterceptor> logger)
         {
             _logger = logger;
         }
