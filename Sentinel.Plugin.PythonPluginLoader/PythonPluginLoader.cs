@@ -2,7 +2,6 @@
 using Sentinel.Plugin.Configs;
 using Sentinel.Plugin.Contracts;
 using Sentinel.Plugin.Models;
-using Sentinel.Plugin.Options;
 using System.Text.Json;
 
 namespace Sentinel.Plugin.PythonPluginLoader
@@ -31,12 +30,19 @@ namespace Sentinel.Plugin.PythonPluginLoader
         public string Name => "PythonPluginLoader";
         public string Description => "Python plugins loader for sentinel.";
 
-        public CommandLineOptionsBase CommandLineOptions { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public PluginConfigBase Config { get; set; } = new Config();
-
-        public IEnumerable<AppBinary> GetAppBinaries(CommandLineOptionsBase commandLineOptions)
+        public CmdOptionsBase CmdOptions { get; set; } = new CmdOptions();
+        public ConfigBase Config { get; set; } = new Config();
+        public void SetConfig(CmdOptionsBase cmdOptions)
         {
-            throw new NotImplementedException();
+            Config.LibraryFolder = cmdOptions.DirectoryPath;
+            Config.ChunkSizeBytes = cmdOptions.ChunkSizeBytes;
+            Config.ForceCalcDigest = !cmdOptions.DryRun;
+
+            var options = (CmdOptions)cmdOptions;
+            var config = (Config)Config;
+
+            config.PythonScriptPath = options.PythonScriptPath;
+            config.PythonClassName = options.PythonClassName;
         }
 
         protected virtual void Dispose(bool disposing)

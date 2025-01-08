@@ -2,7 +2,7 @@
 
 namespace Sentinel.Plugin.SingleFile
 {
-    public class Config : PluginConfigBase
+    public class Config : ConfigBase
     {
     }
 }

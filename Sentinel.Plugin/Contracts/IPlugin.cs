@@ -1,6 +1,5 @@
 ﻿using Sentinel.Plugin.Configs;
 using Sentinel.Plugin.Models;
-using Sentinel.Plugin.Options;
 using Sentinel.Plugin.Results;
 
 namespace Sentinel.Plugin.Contracts
@@ -9,18 +8,15 @@ namespace Sentinel.Plugin.Contracts
     {
         string Name { get; }
         string Description { get; }
-        CommandLineOptionsBase CommandLineOptions { get; set; }
-        PluginConfigBase Config { get; set; }
-        object ConfigObj
+        CmdOptionsBase CmdOptions { get; set; }
+        ConfigBase Config { get; set; }
+        void SetConfig(CmdOptionsBase cmdOptions)
         {
-            set
-            {
-                Config = value as PluginConfigBase
-                    ?? throw new ArgumentException(Name + " config conversion failed.");
-            }
+            Config.LibraryFolder = cmdOptions.DirectoryPath;
+            Config.ChunkSizeBytes = cmdOptions.ChunkSizeBytes;
+            Config.ForceCalcDigest = !cmdOptions.DryRun;
         }
 
-        IEnumerable<AppBinary> GetAppBinaries(CommandLineOptionsBase commandLineOptions);
         Task<ScanChangeResult> DoFullScanAsync(IQueryable<AppBinary> appBinaries, CancellationToken ct = default);
         ScanChangeResult DoFullScan(IQueryable<AppBinary> appBinaries)
         {

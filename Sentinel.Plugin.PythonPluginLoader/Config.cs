@@ -2,7 +2,7 @@
 
 namespace Sentinel.Plugin.PythonPluginLoader
 {
-    public class Config : PluginConfigBase
+    public class Config : ConfigBase
     {
         public string PythonScriptPath { get; set; } = null!;
         public string PythonClassName { get; set; } = "Plugin";

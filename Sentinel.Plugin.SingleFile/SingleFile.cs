@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Sentinel.Plugin.Configs;
 using Sentinel.Plugin.Contracts;
-using Sentinel.Plugin.Options;
 
 namespace Sentinel.Plugin.SingleFile
 {
@@ -16,7 +15,7 @@ namespace Sentinel.Plugin.SingleFile
 
         public string Name => "SingleFile";
         public string Description => "A sentinel plugin that handles single files.";
-        public CommandLineOptionsBase CommandLineOptions { get; set; } = new Options();
-        public PluginConfigBase Config { get; set; } = new Config();
+        public CmdOptionsBase CmdOptions { get; set; } = new CmdOptions();
+        public ConfigBase Config { get; set; } = new Config();
     }
 }

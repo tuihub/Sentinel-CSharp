@@ -44,7 +44,7 @@ namespace Sentinel.Services
                     _systemConfig.LibraryConfigs
                     .Select(x => new ReportSentinelInformationRequest.Types.SentinelLibrary
                     {
-                        Id = dbContext.AppBinaryBaseDirs.Single(d => d.Path == x.PluginConfig.Get<PluginConfigBase>()!.LibraryFolder).Id,
+                        Id = dbContext.AppBinaryBaseDirs.Single(d => d.Path == x.PluginConfig.Get<ConfigBase>()!.LibraryFolder).Id,
                         DownloadBasePath = x.DownloadBasePath
                     }));
                 return await client.ReportSentinelInformationAsync(request, cancellationToken: ct);
@@ -58,7 +58,7 @@ namespace Sentinel.Services
                 using var dbContext = scope.ServiceProvider.GetRequiredService<SentinelDbContext>();
                 var client = scope.ServiceProvider.GetRequiredService<LibrarianSephirahServiceClient>();
                 _logger.LogInformation("Reporting AppBinaries");
-                var libraryPaths = _systemConfig.LibraryConfigs.Select(x => x.PluginConfig.Get<PluginConfigBase>()!.LibraryFolder).ToList();
+                var libraryPaths = _systemConfig.LibraryConfigs.Select(x => x.PluginConfig.Get<ConfigBase>()!.LibraryFolder).ToList();
                 var sentinelAppBinaries = dbContext.AppBinaries
                     .Include(x => x.AppBinaryBaseDir)
                     .Where(x => libraryPaths.Contains(x.AppBinaryBaseDir.Path))

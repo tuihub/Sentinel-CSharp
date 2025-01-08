@@ -1,10 +1,10 @@
 ﻿using CommandLine;
-using Sentinel.Plugin.Options;
+using Sentinel.Plugin.Configs;
 
 namespace Sentinel.Plugin.SingleFile
 {
     [Verb("singlefile", aliases: ["sf"], HelpText = "A plugin that handles single files.")]
-    public class Options : CommandLineOptionsBase
+    public class CmdOptions : CmdOptionsBase
     {
     }
 }

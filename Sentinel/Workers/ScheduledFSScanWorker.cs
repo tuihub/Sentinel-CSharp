@@ -26,7 +26,7 @@ namespace Sentinel.Workers
             _logger = logger;
             _serviceScopeFactory = serviceScopeFactory;
             _plugin = plugin;
-            _plugin.ConfigObj = pluginConfigSection.Get(plugin.Config.GetType()) as PluginConfigBase
+            _plugin.Config = pluginConfigSection.Get(plugin.Config.GetType()) as ConfigBase
                 ?? throw new Exception($"Failed to parse PluginConfig for {plugin.Name}");
             _librarianClientService = librarianClientService;
             _scanInterval = scanInterval;

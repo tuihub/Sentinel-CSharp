@@ -16,5 +16,18 @@
             Files = files ?? throw new ArgumentNullException(nameof(files));
             Guid = guid;
         }
+
+        public string ToFullHumanString(int indent = 0)
+        {
+            string indentStr = new string('\t', indent);
+            string ret = $"{indentStr}{nameof(AppBinary)} {{ Name: {Name}, Path: {Path}, SizeBytes: {SizeBytes}, " +
+                $"Guid: {Guid}, Files: [";
+            foreach (var file in Files)
+            {
+                ret += Environment.NewLine + indentStr + file.ToFullHumanString(indent + 1);
+            }
+            ret += Environment.NewLine + indentStr + "] }";
+            return ret;
+        }
     }
 }

@@ -13,15 +13,15 @@ namespace Sentinel.Plugin.SingleFile
             var appBinaries = appBinariesIQ.AsEnumerable();
 
             // appBinariesFilePaths, fsFiles, filesToXX is full paths
-            var appBinariesFilePaths = appBinaries.Select(x => Path.Combine(Config.LibraryFolder, x.Path));
+            var appBinariesFilePaths = appBinaries.Select(x => Path.Combine(Config.LibraryFolder, x.Files.Single().Path));
             var fsFiles = Directory.EnumerateFiles(Config.LibraryFolder, "*", SearchOption.AllDirectories);
             var filesToRemove = appBinariesFilePaths.Except(fsFiles);
             var filesToAdd = fsFiles.Except(appBinariesFilePaths);
 
-            var appBinariesToRecheck = appBinaries.ExceptBy(filesToRemove, x => Path.Combine(Config.LibraryFolder, x.Path));
+            var appBinariesToRecheck = appBinaries.ExceptBy(filesToRemove, x => Path.Combine(Config.LibraryFolder, x.Files.Single().Path));
 
             _logger?.LogDebug($"DoFullScanAsync: Files to remove: {string.Join(", ", filesToRemove)}");
-            var appBinariesToRemove = appBinaries.Where(x => filesToRemove.Select(x => Path.GetRelativePath(Config.LibraryFolder, x)).Contains(x.Path)).ToList();
+            var appBinariesToRemove = appBinaries.Where(x => filesToRemove.Select(x => Path.GetRelativePath(Config.LibraryFolder, x)).Contains(x.Files.Single().Path)).ToList();
 
             var appBinariesToAdd = new List<AppBinary>(filesToAdd.Count());
             foreach (var file in filesToAdd)
@@ -29,8 +29,7 @@ namespace Sentinel.Plugin.SingleFile
                 _logger?.LogInformation($"DoFullScanAsync: Adding {file}");
                 var fileEntry = await FileEntryHelper.GetFileEntryAsync(_logger, file, Config.LibraryFolder, Config.ChunkSizeBytes, ct: ct);
                 ct.ThrowIfCancellationRequested();
-                appBinariesToAdd.Add(new AppBinary(Path.GetFileName(file), Path.GetRelativePath(Config.LibraryFolder, file),
-                    fileEntry.SizeBytes, [fileEntry], Guid.NewGuid()));
+                appBinariesToAdd.Add(new AppBinary(Path.GetFileName(file), Path.GetRelativePath(file, file), fileEntry.SizeBytes, [fileEntry], Guid.NewGuid()));
             }
 
             var appBinariesToUpdate = new List<AppBinary>();

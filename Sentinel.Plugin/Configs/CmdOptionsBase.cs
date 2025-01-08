@@ -1,12 +1,9 @@
 ﻿using CommandLine;
 
-namespace Sentinel.Plugin.Options
+namespace Sentinel.Plugin.Configs
 {
-    public class CommandLineOptionsBase
+    public class CmdOptionsBase
     {
-        [Option('c', "console", Required = true, HelpText = "Print to console.", SetName = "console")]
-        public bool PrintToConsole { get; set; }
-
         [Option('d', "dir", Required = true, HelpText = "The directory to scan.")]
         public string DirectoryPath { get; set; } = string.Empty;
         [Option('n', "dry-run", Required = false, Default = false, HelpText = "Dry run, not calculating SHA256 checksum.")]

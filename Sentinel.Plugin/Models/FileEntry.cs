@@ -21,5 +21,18 @@ namespace Sentinel.Plugin.Models
             Chunks = chunks ?? throw new ArgumentNullException(nameof(chunks));
             LastWriteUtc = lastWriteUtc;
         }
+
+        public string ToFullHumanString(int indent = 1)
+        {
+            string indentStr = new string('\t', indent);
+            string ret = $"{indentStr}{nameof(FileEntry)} {{ Path: {Path}, SizeBytes: {SizeBytes}, " +
+                $"Sha256: {BitConverter.ToString(Sha256).Replace("-", "")}, LastWriteUtc: {LastWriteUtc}, Chunks: [";
+            foreach (var chunk in Chunks)
+            {
+                ret += Environment.NewLine + indentStr + chunk.ToFullHumanString(indent + 1);
+            }
+            ret += Environment.NewLine + indentStr + "] }";
+            return ret;
+        }
     }
 }
