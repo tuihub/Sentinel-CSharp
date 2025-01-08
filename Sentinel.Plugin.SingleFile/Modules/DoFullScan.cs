@@ -35,7 +35,7 @@ namespace Sentinel.Plugin.SingleFile
             var appBinariesToUpdate = new List<AppBinary>();
             foreach (var appBinary in appBinariesToRecheck)
             {
-                var fullPath = Path.Combine(Config.LibraryFolder, appBinary.Path);
+                var fullPath = Path.Combine(Config.LibraryFolder, appBinary.Files.Single().Path);
                 if (Config.ForceCalcDigest || File.GetLastWriteTimeUtc(fullPath) != appBinary.Files.First().LastWriteUtc)
                 {
                     _logger?.LogInformation("DoFullScanAsync: Rechecking " + fullPath);
