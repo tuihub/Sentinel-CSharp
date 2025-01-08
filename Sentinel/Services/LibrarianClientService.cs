@@ -68,7 +68,7 @@ namespace Sentinel.Services
                     {
                         AppBinary = x.ToProto(_sentinelConfig.NeedToken),
                         SentinelLibraryId = x.AppBinaryBaseDir.Id,
-                        SentinelGeneratedId = x.Id.ToString()
+                        SentinelGeneratedId = x.Guid.ToString()
                     });
                 var request = new ReportAppBinariesRequest();
                 request.SentinelAppBinaries.AddRange(sentinelAppBinaries);
