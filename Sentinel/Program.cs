@@ -115,12 +115,24 @@ namespace Sentinel
             builder.Services.AddSingleton<StateService>();
 
             // add grpc services
-            builder.Services.AddSingleton<ClientTokenInterceptor>();
-            builder.Services.AddGrpcClient<LibrarianSephirahService.LibrarianSephirahServiceClient>(o =>
+            if (options.NoReportToServer)
             {
-                o.Address = new Uri(systemConfig.LibrarianUrl);
-            })
-            .AddInterceptor<ClientTokenInterceptor>();
+                builder.Services.AddSingleton<LoggingOnlyInterceptor>();
+                builder.Services.AddGrpcClient<LibrarianSephirahService.LibrarianSephirahServiceClient>(o =>
+                {
+                    o.Address = new Uri("http://127.0.0.1");
+                })
+                .AddInterceptor<LoggingOnlyInterceptor>();
+            }
+            else
+            {
+                builder.Services.AddSingleton<ClientTokenInterceptor>();
+                builder.Services.AddGrpcClient<LibrarianSephirahService.LibrarianSephirahServiceClient>(o =>
+                {
+                    o.Address = new Uri(systemConfig.LibrarianUrl);
+                })
+                .AddInterceptor<ClientTokenInterceptor>();
+            }
             builder.Services.AddSingleton<LibrarianClientService>();
 
             // load built-in plugins
