@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Sentinel.Plugin.Configs;
 using Sentinel.Plugin.Contracts;
-using Sentinel.Plugin.Models;
+using Sentinel.Plugin.PythonPluginLoader.Modules;
 using System.Text.Json;
 
 namespace Sentinel.Plugin.PythonPluginLoader
@@ -14,15 +14,18 @@ namespace Sentinel.Plugin.PythonPluginLoader
         };
 
         private readonly ILogger? _logger;
+        private readonly ILoggerFactory? _loggerFactory;
+        private PythonLogger? _pluginLogger;
         private bool disposedValue;
 
         public PythonPluginLoader()
         {
             InitializePython();
         }
-        public PythonPluginLoader(ILogger<PythonPluginLoader> logger)
+        public PythonPluginLoader(ILogger<PythonPluginLoader> logger, ILoggerFactory? loggerFactory)
         {
             _logger = logger;
+            _loggerFactory = loggerFactory;
 
             InitializePython();
         }
@@ -31,7 +34,16 @@ namespace Sentinel.Plugin.PythonPluginLoader
         public string Description => "Python plugins loader for sentinel.";
 
         public CmdOptionsBase CmdOptions { get; set; } = new CmdOptions();
-        public ConfigBase Config { get; set; } = new Config();
+        private ConfigBase _config = new Config();
+        public ConfigBase Config
+        {
+            get => _config;
+            set
+            {
+                _config = value;
+                _pluginLogger = new PythonLogger(_loggerFactory?.CreateLogger($"{nameof(PythonLogger)}-{((Config)value).PythonClassName}-{((Config)value).LibraryName}"));
+            }
+        }
         public void SetConfig(CmdOptionsBase cmdOptions)
         {
             Config.LibraryFolder = cmdOptions.DirectoryPath;
@@ -43,6 +55,8 @@ namespace Sentinel.Plugin.PythonPluginLoader
 
             config.PythonScriptPath = options.PythonScriptPath;
             config.PythonClassName = options.PythonClassName;
+
+            _pluginLogger = new PythonLogger(_loggerFactory?.CreateLogger($"{nameof(PythonLogger)}-{config.PythonClassName}-{config.LibraryName}"));
         }
 
         protected virtual void Dispose(bool disposing)

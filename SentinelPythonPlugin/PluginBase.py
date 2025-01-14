@@ -2,6 +2,7 @@ import base64
 import datetime
 import hashlib
 import json
+import logging
 import math
 import os
 import uuid
@@ -73,16 +74,52 @@ class ScanChangeResult:
         }
 
 
+class CSharpLoggingHandler(logging.Handler):
+    def __init__(self, csharp_logger):
+        super().__init__()
+        self.csharp_logger = csharp_logger
+
+    def emit(self, record):
+        if self.csharp_logger:
+            try:
+                # Format the log message
+                msg = self.format(record)
+
+                # Map Python log levels to C# ILogger methods
+                if record.levelno >= logging.CRITICAL:
+                    self.csharp_logger.LogCritical(msg)
+                elif record.levelno >= logging.ERROR:
+                    self.csharp_logger.LogError(msg)
+                elif record.levelno >= logging.WARNING:
+                    self.csharp_logger.LogWarning(msg)
+                elif record.levelno >= logging.INFO:
+                    self.csharp_logger.LogInformation(msg)
+                elif record.levelno >= logging.DEBUG:
+                    self.csharp_logger.LogDebug(msg)
+                else:
+                    self.csharp_logger.LogTrace(msg)
+
+            except Exception:
+                self.handleError(record)
+        else:
+            super().emit(record)
+
+
 class PluginBase:
-    def __init__(self, config):
+    def __init__(self, config, csharp_logger, logging_level):
         self.library_name: str = config.LibraryName
         self.library_folder: str = config.LibraryFolder
         self.chunk_size_bytes: int = config.ChunkSizeBytes
         self.force_calc_digest: bool = config.ForceCalcDigest
         self.custom_config: dict = config.PythonScriptCustomConfig
+        logger = logging.getLogger(self.library_name)
+        logger.setLevel(logging_level)
+        logger.addHandler(CSharpLoggingHandler(csharp_logger))
+        self.logger = logger
 
     def _get_file_entry(self, file_full_path: str, base_path: str, calc_sha256: bool = True,
                         buffer_size_bytes: int = 8192) -> FileEntry:
+        self.logger.info(f"_get_file_entry: Getting file entry for {file_full_path}")
         file_size = os.path.getsize(file_full_path)
         if self.chunk_size_bytes % buffer_size_bytes != 0:
             raise ValueError("Chunk size must be a multiple of buffer size.")
@@ -92,8 +129,10 @@ class PluginBase:
 
         if calc_sha256:
             sha256_file = hashlib.sha256()
+            self.logger.debug(f"_get_file_entry: Calculating SHA256 for {file_full_path}")
             with open(file_full_path, 'rb') as file_stream:
                 for i in range(chunk_count):
+                    self.logger.debug(f"_get_file_entry: Processing chunk {i + 1}/{chunk_count}")
                     offset_bytes = i * self.chunk_size_bytes
                     current_chunk_size_bytes = min(offset_bytes + self.chunk_size_bytes, file_size) - offset_bytes
 
@@ -115,6 +154,7 @@ class PluginBase:
 
             file_hash = sha256_file.digest()
         else:
+            self.logger.debug(f"_get_file_entry: Skipping SHA256 calculation for {file_full_path}")
             for i in range(chunk_count):
                 offset_bytes = i * self.chunk_size_bytes
                 end_bytes = min(offset_bytes + self.chunk_size_bytes, file_size)

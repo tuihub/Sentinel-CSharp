@@ -65,6 +65,7 @@ namespace Sentinel.Plugin.PythonPluginLoader {
         ///import datetime
         ///import hashlib
         ///import json
+        ///import logging
         ///import math
         ///import os
         ///import uuid
@@ -80,7 +81,7 @@ namespace Sentinel.Plugin.PythonPluginLoader {
         ///        return {
         ///            &apos;offset_bytes&apos;: self.offset_bytes,
         ///            &apos;size_bytes&apos;: self.size_bytes,
-        ///            &apos;sha256&apos;: base64.b64encode(s [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        ///            &apos;sha256&apos;: ba [字符串的其余部分被截断]&quot;; 的本地化字符串。
         /// </summary>
         internal static string PluginBase {
             get {
