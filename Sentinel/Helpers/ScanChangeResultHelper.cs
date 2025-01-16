@@ -12,7 +12,10 @@ namespace Sentinel.Helpers
             foreach (var appBinary in result.AppBinariesToRemove)
             {
                 ct.ThrowIfCancellationRequested();
-                var dbAppBinary = await dbContext.AppBinaries.SingleOrDefaultAsync(x => x.Path == appBinary.Path, ct);
+                var dbAppBinary = await dbContext.AppBinaries
+                    .Include(x => x.Files)
+                    .ThenInclude(x => x.Chunks)
+                    .SingleOrDefaultAsync(x => x.Path == appBinary.Path, ct);
                 if (dbAppBinary != null)
                 {
                     dbContext.AppBinaries.Remove(dbAppBinary);
@@ -27,7 +30,10 @@ namespace Sentinel.Helpers
             foreach (var appBinary in result.AppBinariesToUpdate)
             {
                 ct.ThrowIfCancellationRequested();
-                var dbAppBinary = await dbContext.AppBinaries.SingleOrDefaultAsync(x => x.Path == appBinary.Path, ct);
+                var dbAppBinary = await dbContext.AppBinaries
+                    .Include(x => x.Files)
+                    .ThenInclude(x => x.Chunks)
+                    .SingleOrDefaultAsync(x => x.Path == appBinary.Path, ct);
                 if (dbAppBinary != null)
                 {
                     dbAppBinary.SizeBytes = appBinary.SizeBytes;
