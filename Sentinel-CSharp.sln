@@ -9,9 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sentinel.Plugin", "Sentinel
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sentinel.Plugin.SingleFile", "Sentinel.Plugin.SingleFile\Sentinel.Plugin.SingleFile.csproj", "{18358106-B045-4FD8-B7A0-3A0DD9C3E521}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sentinel.Plugin.Zdfx", "Sentinel.Plugin.Zdfx\Sentinel.Plugin.Zdfx.csproj", "{491C5D07-43A9-4F1C-B340-AE563DC59D01}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sentinel.Plugin.PythonPluginLoader", "Sentinel.Plugin.PythonPluginLoader\Sentinel.Plugin.PythonPluginLoader.csproj", "{FE83C0F9-FAAB-4E19-8658-61CF5F739DDD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sentinel.Plugin.PythonPluginLoader", "Sentinel.Plugin.PythonPluginLoader\Sentinel.Plugin.PythonPluginLoader.csproj", "{FE83C0F9-FAAB-4E19-8658-61CF5F739DDD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sentinel.Plugin.SubFolder", "Sentinel.Plugin.SubFolder\Sentinel.Plugin.SubFolder.csproj", "{25C414C4-92B7-4285-B356-543AD7B9A26E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,14 +31,14 @@ Global
 		{18358106-B045-4FD8-B7A0-3A0DD9C3E521}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{18358106-B045-4FD8-B7A0-3A0DD9C3E521}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{18358106-B045-4FD8-B7A0-3A0DD9C3E521}.Release|Any CPU.Build.0 = Release|Any CPU
-		{491C5D07-43A9-4F1C-B340-AE563DC59D01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{491C5D07-43A9-4F1C-B340-AE563DC59D01}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{491C5D07-43A9-4F1C-B340-AE563DC59D01}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{491C5D07-43A9-4F1C-B340-AE563DC59D01}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FE83C0F9-FAAB-4E19-8658-61CF5F739DDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FE83C0F9-FAAB-4E19-8658-61CF5F739DDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FE83C0F9-FAAB-4E19-8658-61CF5F739DDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FE83C0F9-FAAB-4E19-8658-61CF5F739DDD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{25C414C4-92B7-4285-B356-543AD7B9A26E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{25C414C4-92B7-4285-B356-543AD7B9A26E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{25C414C4-92B7-4285-B356-543AD7B9A26E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{25C414C4-92B7-4285-B356-543AD7B9A26E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
