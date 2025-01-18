@@ -13,6 +13,7 @@ namespace Sentinel.Plugin.PythonPluginLoader
         {
             try
             {
+                InitializePython();
                 ScanChangeResult result;
                 var pyScriptPath = (Config as Config)!.PythonScriptPath;
                 var pyClassName = (Config as Config)!.PythonClassName;

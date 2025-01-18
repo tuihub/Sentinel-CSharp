@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace Sentinel.Plugin.PythonPluginLoader.Modules
+namespace Sentinel.Plugin.PythonPluginLoader
 {
     public class PythonLogger
     {

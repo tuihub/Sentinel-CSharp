@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Sentinel.Plugin.Configs;
 using Sentinel.Plugin.Contracts;
-using Sentinel.Plugin.PythonPluginLoader.Modules;
 using System.Text.Json;
 
 namespace Sentinel.Plugin.PythonPluginLoader
@@ -20,14 +19,11 @@ namespace Sentinel.Plugin.PythonPluginLoader
 
         public PythonPluginLoader()
         {
-            InitializePython();
         }
         public PythonPluginLoader(ILogger<PythonPluginLoader> logger, ILoggerFactory? loggerFactory)
         {
             _logger = logger;
             _loggerFactory = loggerFactory;
-
-            InitializePython();
         }
 
         public string Name => "PythonPluginLoader";

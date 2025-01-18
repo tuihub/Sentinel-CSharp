@@ -8,7 +8,7 @@ namespace Sentinel.Plugin.PythonPluginLoader
     {
         [Option('s', "script-path", Required = true, HelpText = "Python script path to load.")]
         public string PythonScriptPath { get; set; } = null!;
-        [Option('c', "script-class", Required = false, HelpText = "Python class to use.")]
+        [Option('c', "script-class", Required = false, Default = "Plugin", HelpText = "Python class to use.")]
         public string PythonClassName { get; set; } = "Plugin";
     }
 }
