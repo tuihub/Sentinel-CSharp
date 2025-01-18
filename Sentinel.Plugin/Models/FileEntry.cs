@@ -29,7 +29,7 @@ namespace Sentinel.Plugin.Models
                 $"Sha256: {BitConverter.ToString(Sha256).Replace("-", "")}, LastWriteUtc: {LastWriteUtc}, Chunks: [";
             foreach (var chunk in Chunks)
             {
-                ret += Environment.NewLine + indentStr + chunk.ToFullHumanString(indent + 1);
+                ret += Environment.NewLine + chunk.ToFullHumanString(indent + 1);
             }
             ret += Environment.NewLine + indentStr + "] }";
             return ret;

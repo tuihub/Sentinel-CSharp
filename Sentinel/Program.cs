@@ -87,7 +87,7 @@ namespace Sentinel
                 plugin.SetConfig(options);
                 var result = plugin.DoFullScan(Enumerable.Empty<Plugin.Models.AppBinary>().AsQueryable());
                 s_logger.LogInformation($"Plugin {plugin.Name} finished with {result.AppBinariesToAdd.Count()} entries.");
-                s_logger.LogInformation(string.Join(Environment.NewLine, result.AppBinariesToAdd.Select(x => x.ToFullHumanString())));
+                Console.WriteLine(string.Join(Environment.NewLine, result.AppBinariesToAdd.Select(x => x.ToFullHumanString())));
             }
             catch (Exception ex)
             {
