@@ -80,42 +80,45 @@ class CSharpLoggingHandler(logging.Handler):
         self.csharp_logger = csharp_logger
 
     def emit(self, record):
-        if self.csharp_logger:
-            try:
-                # Format the log message
-                msg = self.format(record)
+        # Format the log message
+        msg = self.format(record)
 
-                # Map Python log levels to C# ILogger methods
-                if record.levelno >= logging.CRITICAL:
-                    self.csharp_logger.LogCritical(msg)
-                elif record.levelno >= logging.ERROR:
-                    self.csharp_logger.LogError(msg)
-                elif record.levelno >= logging.WARNING:
-                    self.csharp_logger.LogWarning(msg)
-                elif record.levelno >= logging.INFO:
-                    self.csharp_logger.LogInformation(msg)
-                elif record.levelno >= logging.DEBUG:
-                    self.csharp_logger.LogDebug(msg)
-                else:
-                    self.csharp_logger.LogTrace(msg)
-
-            except Exception:
-                self.handleError(record)
+        # Map Python log levels to C# ILogger methods
+        if record.levelno >= logging.CRITICAL:
+            self.csharp_logger.LogCritical(msg)
+        elif record.levelno >= logging.ERROR:
+            self.csharp_logger.LogError(msg)
+        elif record.levelno >= logging.WARNING:
+            self.csharp_logger.LogWarning(msg)
+        elif record.levelno >= logging.INFO:
+            self.csharp_logger.LogInformation(msg)
+        elif record.levelno >= logging.DEBUG:
+            self.csharp_logger.LogDebug(msg)
         else:
-            super().emit(record)
+            self.csharp_logger.LogTrace(msg)
 
 
 class PluginBase:
-    def __init__(self, config, csharp_logger, logging_level):
-        self.library_name: str = config.LibraryName
-        self.library_folder: str = config.LibraryFolder
-        self.chunk_size_bytes: int = config.ChunkSizeBytes
-        self.force_calc_digest: bool = config.ForceCalcDigest
-        self.custom_config: dict = config.PythonScriptCustomConfig
-        logger = logging.getLogger(self.library_name)
-        logger.setLevel(logging_level)
-        logger.addHandler(CSharpLoggingHandler(csharp_logger))
+    def __init__(self, config_json, csharp_logger, logging_level):
+        if csharp_logger:
+            logger = logging.getLogger()
+            logger.setLevel(logging_level)
+            logger.addHandler(CSharpLoggingHandler(csharp_logger))
+        else:
+            logging.basicConfig(
+                level=logging.DEBUG,
+                format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                datefmt='%Y-%m-%d %H:%M:%S'
+            )
+            logger = logging.getLogger()
         self.logger = logger
+        self.logger.debug(f"PluginBase: Initializing plugin with config: {config_json}")
+        config = json.loads(config_json)
+        self.library_name: str = config['LibraryName']
+        self.library_folder: str = config['LibraryFolder']
+        self.chunk_size_bytes: int = int(config['ChunkSizeBytes'])
+        self.force_calc_digest: bool = bool(config['ForceCalcDigest'])
+        self.custom_config: dict = config['PythonScriptCustomConfig']
 
     def _get_file_entry(self, file_full_path: str, base_path: str, calc_sha256: bool = True,
                         buffer_size_bytes: int = 8192) -> FileEntry:

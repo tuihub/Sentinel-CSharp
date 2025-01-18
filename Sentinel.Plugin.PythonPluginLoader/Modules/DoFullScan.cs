@@ -22,7 +22,7 @@ namespace Sentinel.Plugin.PythonPluginLoader
                     var code = File.ReadAllText(pyScriptPath);
                     scope.Import(scope.Exec(code));
                     _logger?.LogDebug($"Creating python class {pyClassName}.");
-                    var pyClass = scope.Get(pyClassName).Invoke((Config as Config)!.ToPython(), _pluginLogger.ToPython());
+                    var pyClass = scope.Get(pyClassName).Invoke(JsonSerializer.Serialize(Config as Config).ToPython(), _pluginLogger.ToPython());
                     _logger?.LogInformation($"Invoking do_full_scan method from python script.");
                     PyObject pyReturn = pyClass.InvokeMethod("do_full_scan", JsonSerializer.Serialize(appBinaries, s_jso).ToPython());
                     _logger?.LogInformation($"Converting python return to ScanChangeResult object.");

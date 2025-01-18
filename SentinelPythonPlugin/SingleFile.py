@@ -5,9 +5,14 @@ import os
 import uuid
 
 
+# import module in dev mode
+if '__file__' in globals():
+    from PluginBase import PluginBase, AppBinary, ScanChangeResult
+
+
 class Plugin(PluginBase):
-    def __init__(self, config, csharp_logger, logging_level=logging.DEBUG):
-        super().__init__(config, csharp_logger, logging_level)
+    def __init__(self, config_json, csharp_logger, logging_level=logging.DEBUG):
+        super().__init__(config_json, csharp_logger, logging_level)
 
     def do_full_scan(self, app_binaries_json: str) -> str:
         app_binaries = self._deserialize_app_binaries(app_binaries_json)
@@ -62,4 +67,14 @@ class Plugin(PluginBase):
                 continue
 
         return json.dumps(ScanChangeResult(app_binaries_to_remove, app_binaries_to_add,
-                                           app_binaries_to_update).to_dict())
+                                           app_binaries_to_update).to_dict(),
+                          ensure_ascii=False)
+
+
+# test method
+if __name__ == '__main__':
+    with open('PluginConfig.json', encoding='utf-8') as f:
+        config_json = f.read()
+    plugin = Plugin(config_json, None, logging.DEBUG)
+    result = plugin.do_full_scan('[]')
+    print(json.dumps(json.loads(result), ensure_ascii=False, indent=2))

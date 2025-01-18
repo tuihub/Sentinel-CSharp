@@ -1,0 +1,12 @@
+{
+  "LibraryName": "Library1",
+  "LibraryFolder": "/path/to/library1",
+  "ChunkSizeBytes": "67108864",
+  "ForceCalcDigest": "false",
+  "PythonScriptPath": "python_plugins/SingleFile.py",
+  "PythonClassName": "Plugin",
+  "PythonScriptCustomConfig": {
+    "k1": "v1",
+    "k2": "v2"
+  }
+}
