@@ -21,7 +21,7 @@ namespace Sentinel.Plugin.Converters
             {
                 value = DateTime.SpecifyKind(value, DateTimeKind.Utc);
             }
-            writer.WriteStringValue(value.ToString("yyyy-MM-ddTHH:mm:ss.ffffffK"));
+            writer.WriteStringValue(value.ToString("yyyy-MM-ddTHH:mm:ssK"));
         }
     }
 

@@ -1,4 +1,3 @@
-import datetime
 import json
 import logging
 import os
@@ -49,19 +48,20 @@ class Plugin(PluginBase):
             full_path = None
             try:
                 full_path = os.path.join(self.library_folder, app_binary.files[0].path)
-                # NOTE: datetime.datetime.utcfromtimestamp does not contain timezone info
-                if (self.force_calc_digest or datetime.datetime.utcfromtimestamp(os.path.getmtime(full_path)) !=
-                        app_binary.files[0].last_write_utc.replace(tzinfo=None)):
+                # NOTE: datetime.utcfromtimestamp does not contain timezone info, use self._getmtime_utc instead
+                if self.force_calc_digest or self._getmtime_utc(full_path) != app_binary.files[0].last_write_utc:
                     self.logger.info(f"Updating file: {full_path}")
                     file_entry = self._get_file_entry(full_path, self.library_folder)
                     if file_entry.sha256 != app_binary.files[0].sha256:
-                        self.logger.info(f"Updated file {full_path} because its SHA256 is changed")
+                        self.logger.info(f"Updating file {full_path} for its changed SHA256")
                         app_binaries_to_update.append(AppBinary(app_binary.name, app_binary.path,
                                                                 file_entry.size_bytes, [file_entry], uuid.uuid4()))
                     else:
-                        self.logger.info(f"Not updating file {full_path} because its SHA256 is the same")
+                        self.logger.info(f"Updating file {full_path} for its changed LastWriteUtc")
+                        app_binary.files[0].last_write_utc = file_entry.last_write_utc
+                        app_binaries_to_update.append(app_binary)
                 else:
-                    self.logger.info(f"Skipping file {full_path} because its lastwriteutc is the same")
+                    self.logger.info(f"Skipping file {full_path} because its last_write_utc is the same")
             except Exception as ex:
                 self.logger.error(f"Failed to update file {full_path}: {ex}")
                 continue

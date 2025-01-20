@@ -248,7 +248,7 @@ class PluginBase:
             raise ValueError("Chunk size must be a multiple of buffer size.")
         chunk_count = math.ceil(file_size / self.chunk_size_bytes)
         chunks = []
-        last_write_utc = datetime.datetime.utcfromtimestamp(os.path.getmtime(file_full_path))
+        last_write_utc = self._getmtime_utc(file_full_path)
 
         if calc_sha256:
             sha256_file = hashlib.sha256()
@@ -288,7 +288,8 @@ class PluginBase:
         relative_path = os.path.relpath(file_full_path, base_path)
         return FileEntry(relative_path, file_size, file_hash, chunks, last_write_utc)
 
-    def _deserialize_app_binaries(self, app_binaries_json: str) -&gt; list[AppBinary]:
+    @staticmethod
+    def _deserialize_app_binaries(app_binaries_json: str) -&gt; list[AppBinary]:
         return [AppBinary(x['name'],
                           x['path'],
                           x['size_bytes'],
@@ -302,7 +303,12 @@ class PluginBase:
                                      datetime.datetime.fromisoformat(f['last_write_utc'].replace('Z', '+00:00')))
                            for f in x['files']],
                           uuid.UUID(x['guid']))
-                for x in json.loads(app_binaries_json)]</value>
+                for x in json.loads(app_binaries_json)]
+
+    @staticmethod
+    def _getmtime_utc(path):
+        return (datetime.datetime.utcfromtimestamp(os.path.getmtime(path))
+                .replace(tzinfo=datetime.timezone.utc).replace(microsecond=0))</value>
     <comment>python PluginBase</comment>
   </data>
 </root>

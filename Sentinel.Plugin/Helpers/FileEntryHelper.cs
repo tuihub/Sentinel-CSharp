@@ -16,7 +16,7 @@ namespace Sentinel.Plugin.Helpers
             int chunkCount = (int)Math.Ceiling((double)fileSize / chunkSizeBytes);
             var chunks = new List<FileEntryChunk>(chunkCount);
             byte[] fileHash;
-            var lastWrite = File.GetLastWriteTimeUtc(fileFullPath);
+            var lastWrite = GetLastWriteTimeUtcSec(fileFullPath);
 
             if (calcSha256)
             {
@@ -87,6 +87,11 @@ namespace Sentinel.Plugin.Helpers
             bool calcSha256 = true, int bufferSizeBytes = 8192)
         {
             return GetFileEntryAsync(null, fileFullPath, basePath, chunkSizeBytes, calcSha256, bufferSizeBytes).Result;
+        }
+
+        public static DateTime GetLastWriteTimeUtcSec(string path)
+        {
+            return File.GetLastWriteTimeUtc(path).AddTicks(-(File.GetLastWriteTimeUtc(path).Ticks % TimeSpan.TicksPerSecond)); ;
         }
     }
 }

@@ -54,21 +54,22 @@ namespace Sentinel.Plugin.SingleFile
                     try
                     {
                         var fullPath = Path.Combine(Config.LibraryFolder, appBinary.Files.Single().Path);
-                        if (Config.ForceCalcDigest || File.GetLastWriteTimeUtc(fullPath) != appBinary.Files.First().LastWriteUtc)
+                        if (Config.ForceCalcDigest || FileEntryHelper.GetLastWriteTimeUtcSec(fullPath) != appBinary.Files.Single().LastWriteUtc)
                         {
-                            _logger?.LogDebug("DoFullScanAsync: old LastWriteUtc: " + appBinary.Files.First().LastWriteUtc.ToString("O") + 
-                                ", current LastWriteUtc: " + File.GetLastWriteTimeUtc(fullPath).ToString("O"));
+                            _logger?.LogDebug("DoFullScanAsync: old LastWriteUtc: " + appBinary.Files.Single().LastWriteUtc.ToString("O") + 
+                                ", current LastWriteUtc: " + FileEntryHelper.GetLastWriteTimeUtcSec(fullPath).ToString("O"));
                             _logger?.LogInformation("DoFullScanAsync: Rechecking " + fullPath);
                             var fileEntry = await FileEntryHelper.GetFileEntryAsync(_logger, fullPath, Config.LibraryFolder, Config.ChunkSizeBytes, ct: ct);
                             ct.ThrowIfCancellationRequested();
-                            if (!fileEntry.Sha256.SequenceEqual(appBinary.Files.First().Sha256))
+                            if (!fileEntry.Sha256.SequenceEqual(appBinary.Files.Single().Sha256))
                             {
-                                _logger?.LogInformation("DoFullScanAsync: Updating " + fullPath + " because its SHA256 is changed.");
+                                _logger?.LogInformation("DoFullScanAsync: Updating " + fullPath + " for its changed SHA256.");
                                 appBinariesToUpdate.Add(new AppBinary(appBinary.Name, appBinary.Path, fileEntry.SizeBytes, [fileEntry], Guid.NewGuid()));
                             }
                             else
                             {
-                                _logger?.LogInformation("DoFullScanAsync: Not updating " + fullPath + " because its SHA256 is not changed.");
+                                _logger?.LogInformation("DoFullScanAsync: Updating " + fullPath + " for its changed LastWriteUtc.");
+                                appBinariesToUpdate.Add(appBinary with { Files = [appBinary.Files.Single() with { LastWriteUtc = fileEntry.LastWriteUtc }] });
                             }
                         }
                         else
