@@ -17,6 +17,30 @@
             Guid = guid;
         }
 
+        public virtual bool Equals(AppBinary? other)
+        {
+            if (other is null) { return false; }
+            return Name.Equals(other.Name) &&
+               Path.Equals(other.Path) &&
+               SizeBytes.Equals(other.SizeBytes) &&
+               Guid.Equals(other.Guid) &&
+               Files.SequenceEqual(other.Files);
+        }
+
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(Name);
+            hash.Add(Path);
+            hash.Add(SizeBytes);
+            hash.Add(Guid);
+            foreach (var file in Files)
+            {
+                hash.Add(file);
+            }
+            return hash.ToHashCode();
+        }
+
         public string ToFullHumanString(int indent = 0)
         {
             string indentStr = new string('\t', indent);

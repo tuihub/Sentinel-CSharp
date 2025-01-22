@@ -22,6 +22,33 @@ namespace Sentinel.Plugin.Models
             LastWriteUtc = lastWriteUtc;
         }
 
+        public virtual bool Equals(FileEntry? other)
+        {
+            if (other is null) { return false; }
+            return Path.Equals(other.Path) &&
+                   SizeBytes.Equals(other.SizeBytes) &&
+                   Sha256.SequenceEqual(other.Sha256) &&
+                   Chunks.SequenceEqual(other.Chunks) &&
+                   LastWriteUtc.Equals(other.LastWriteUtc);
+        }
+
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(Path);
+            hash.Add(SizeBytes);
+            foreach (var b in Sha256)
+            {
+                hash.Add(b);
+            }
+            foreach (var chunk in Chunks)
+            {
+                hash.Add(chunk);
+            }
+            hash.Add(LastWriteUtc);
+            return hash.ToHashCode();
+        }
+
         public string ToFullHumanString(int indent = 1)
         {
             string indentStr = new string('\t', indent);

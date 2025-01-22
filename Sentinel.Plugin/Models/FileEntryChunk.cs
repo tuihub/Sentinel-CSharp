@@ -14,6 +14,26 @@
             if (sha256.Length != 32) { throw new ArgumentException("SHA256 must be 32 bytes long."); }
         }
 
+        public virtual bool Equals(FileEntryChunk? other)
+        {
+            if (other is null) { return false; }
+            return OffsetBytes.Equals(other.OffsetBytes) &&
+                   SizeBytes.Equals(other.SizeBytes) &&
+                   Sha256.SequenceEqual(other.Sha256);
+        }
+
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(OffsetBytes);
+            hash.Add(SizeBytes);
+            foreach (var b in Sha256)
+            {
+                hash.Add(b);
+            }
+            return hash.ToHashCode();
+        }
+
         public string ToFullHumanString(int indent = 2)
         {
             string indentStr = new string('\t', indent);
