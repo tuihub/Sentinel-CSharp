@@ -38,17 +38,17 @@ namespace Sentinel.Plugin.Helpers
             return false;
         }
 
-        public static async Task<AppBinary> GetAppBinaryAsync(ILogger? logger, IEnumerable<string> fsFiles, string currentFolder, 
+        public static async Task<AppBinary> GetAppBinaryAsync(ILogger? logger, IEnumerable<string> fsFiles, string libraryFolder, 
             long chunkSizeBytes, string appBinaryRelativePath, CancellationToken ct = default)
         {
             var fileEntries = new List<FileEntry>(fsFiles.Count());
             foreach (var fsFile in fsFiles)
             {
                 logger?.LogInformation($"GetAppBinaryAsync: Adding file {fsFile}.");
-                fileEntries.Add(await FileEntryHelper.GetFileEntryAsync(logger, fsFile, currentFolder, chunkSizeBytes, ct: ct));
+                fileEntries.Add(await FileEntryHelper.GetFileEntryAsync(logger, fsFile, libraryFolder, chunkSizeBytes, ct: ct));
             }
             return new AppBinary(
-                Path.GetFileName(currentFolder),
+                Path.GetFileName(appBinaryRelativePath),
                 appBinaryRelativePath,
                 fileEntries.Sum(f => f.SizeBytes),
                 fileEntries,

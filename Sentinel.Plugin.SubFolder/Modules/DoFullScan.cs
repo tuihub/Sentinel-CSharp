@@ -53,12 +53,12 @@ namespace Sentinel.Plugin.SubFolder
                                 if (!appBinaries.Any(ab => ab.Path == appBinaryRelativePath))
                                 {
                                     _logger?.LogInformation($"DoFullScanAsync: Adding app binary {appBinaryRelativePath}.");
-                                    appBinariesToAdd.Add(await AppBinaryHelper.GetAppBinaryAsync(_logger, fsFiles, currentFolder, config.ChunkSizeBytes, appBinaryRelativePath, ct: ct));
+                                    appBinariesToAdd.Add(await AppBinaryHelper.GetAppBinaryAsync(_logger, fsFiles, Config.LibraryFolder, config.ChunkSizeBytes, appBinaryRelativePath, ct: ct));
                                 }
                                 else if (AppBinaryHelper.NeedRescan(_logger, config.LibraryFolder, appBinaries.Single(ab => ab.Path == appBinaryRelativePath), fsFiles))
                                 {
                                     _logger?.LogInformation($"DoFullScanAsync: App binary {appBinaryRelativePath} needs a rescan.");
-                                    appBinariesToUpdate.Add(await AppBinaryHelper.GetAppBinaryAsync(_logger, fsFiles, currentFolder, config.ChunkSizeBytes, appBinaryRelativePath, ct: ct));
+                                    appBinariesToUpdate.Add(await AppBinaryHelper.GetAppBinaryAsync(_logger, fsFiles, Config.LibraryFolder, config.ChunkSizeBytes, appBinaryRelativePath, ct: ct));
                                 }
                                 else
                                 {
@@ -96,12 +96,12 @@ namespace Sentinel.Plugin.SubFolder
                                     if (!appBinaries.Any(ab => ab.Path == appBinaryRelativePath))
                                     {
                                         _logger?.LogInformation($"DoFullScanAsync: Adding app binary {appBinaryRelativePath}.");
-                                        appBinariesToAdd.Add(await AppBinaryHelper.GetAppBinaryAsync(_logger, fsFiles, currentFolder, config.ChunkSizeBytes, appBinaryRelativePath, ct: ct));
+                                        appBinariesToAdd.Add(await AppBinaryHelper.GetAppBinaryAsync(_logger, fsFiles, Config.LibraryFolder, config.ChunkSizeBytes, appBinaryRelativePath, ct: ct));
                                     }
                                     else if (AppBinaryHelper.NeedRescan(_logger, config.LibraryFolder, appBinaries.Single(ab => ab.Path == appBinaryRelativePath), fsFiles))
                                     {
                                         _logger?.LogInformation($"DoFullScanAsync: App binary {appBinaryRelativePath} needs a rescan.");
-                                        appBinariesToUpdate.Add(await AppBinaryHelper.GetAppBinaryAsync(_logger, fsFiles, currentFolder, config.ChunkSizeBytes, appBinaryRelativePath, ct: ct));
+                                        appBinariesToUpdate.Add(await AppBinaryHelper.GetAppBinaryAsync(_logger, fsFiles, Config.LibraryFolder, config.ChunkSizeBytes, appBinaryRelativePath, ct: ct));
                                     }
                                     else
                                     {
