@@ -44,13 +44,13 @@ namespace Sentinel.Plugin.Helpers
             var fileEntries = new List<FileEntry>(fsFiles.Count());
             foreach (var fsFile in fsFiles)
             {
-                logger?.LogInformation($"GetAppBinary: Adding file {fsFile}.");
+                logger?.LogInformation($"GetAppBinaryAsync: Adding file {fsFile}.");
                 fileEntries.Add(await FileEntryHelper.GetFileEntryAsync(logger, fsFile, currentFolder, chunkSizeBytes, ct: ct));
             }
             return new AppBinary(
                 Path.GetFileName(currentFolder),
                 appBinaryRelativePath,
-                fsFiles.Sum(f => new FileInfo(f).Length),
+                fileEntries.Sum(f => f.SizeBytes),
                 fileEntries,
                 Guid.NewGuid());
         }

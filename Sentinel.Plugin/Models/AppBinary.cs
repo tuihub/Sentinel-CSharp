@@ -21,10 +21,10 @@
         {
             if (other is null) { return false; }
             return Name.Equals(other.Name) &&
-               Path.Equals(other.Path) &&
-               SizeBytes.Equals(other.SizeBytes) &&
-               Guid.Equals(other.Guid) &&
-               Files.SequenceEqual(other.Files);
+                   Path.Equals(other.Path) &&
+                   SizeBytes.Equals(other.SizeBytes) &&
+                   Guid.Equals(other.Guid) &&
+                   Files.SequenceEqual(other.Files);
         }
 
         public override int GetHashCode()

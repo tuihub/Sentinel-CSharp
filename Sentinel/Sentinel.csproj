@@ -40,6 +40,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Sentinel.Plugin.PythonPluginLoader\Sentinel.Plugin.PythonPluginLoader.csproj" />
     <ProjectReference Include="..\Sentinel.Plugin.SingleFile\Sentinel.Plugin.SingleFile.csproj" />
+    <ProjectReference Include="..\Sentinel.Plugin.SubFolder\Sentinel.Plugin.SubFolder.csproj" />
     <ProjectReference Include="..\Sentinel.Plugin\Sentinel.Plugin.csproj" />
   </ItemGroup>
 

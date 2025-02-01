@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Sentinel.Plugin.Contracts;
+using Sentinel.Plugin.Helpers;
 using Sentinel.Plugin.Models;
 using Sentinel.Plugin.Results;
 using Sentinel.Plugin.SubFolder.Helpers;
@@ -22,8 +23,14 @@ namespace Sentinel.Plugin.SubFolder
                 });
                 _logger?.LogDebug($"DoFullScanAsync: Folders to scan: {string.Join(", ", folders)}");
 
+                var appBinariesToAdd = new List<AppBinary>();
+                var appBinariesToUpdate = new List<AppBinary>();
+                var appBinariesToRemove = new List<AppBinary>();
+                var appBinariesUpToDateRelPaths = new List<string>();
+
                 foreach (var folder in folders)
                 {
+                    ct.ThrowIfCancellationRequested();
                     if (PathHelper.GetRelativeDepth(folder, config.LibraryFolder) != config.MinDepth - 1)
                     {
                         _logger?.LogDebug($"DoFullScanAsync: Skipping {folder} because it is not at the minimum depth.");
@@ -32,22 +39,38 @@ namespace Sentinel.Plugin.SubFolder
 
                     if (config.ScanPolicy == ScanPolicy.UntilAnyFile)
                     {
-                        ScanUntilAnyFileRecursively(folder);
+                        await ScanUntilAnyFileRecursively(folder);
 
                         #region local function
-                        void ScanUntilAnyFileRecursively(string currentFolder)
+                        async Task ScanUntilAnyFileRecursively(string currentFolder)
                         {
                             var currentDirFiles = Directory.EnumerateFiles(currentFolder, "*", SearchOption.TopDirectoryOnly);
                             if (currentDirFiles.Any())
                             {
                                 _logger?.LogDebug($"DoFullScanAsync: Files found in {currentFolder}.");
-                                return;
+                                var appBinaryRelativePath = Path.GetRelativePath(config.LibraryFolder, currentFolder);
+                                var fsFiles = Directory.EnumerateFiles(currentFolder, "*", SearchOption.AllDirectories);
+                                if (!appBinaries.Any(ab => ab.Path == appBinaryRelativePath))
+                                {
+                                    _logger?.LogInformation($"DoFullScanAsync: Adding app binary {appBinaryRelativePath}.");
+                                    appBinariesToAdd.Add(await AppBinaryHelper.GetAppBinaryAsync(_logger, fsFiles, currentFolder, config.ChunkSizeBytes, appBinaryRelativePath, ct: ct));
+                                }
+                                else if (AppBinaryHelper.NeedRescan(_logger, config.LibraryFolder, appBinaries.Single(ab => ab.Path == appBinaryRelativePath), fsFiles))
+                                {
+                                    _logger?.LogInformation($"DoFullScanAsync: App binary {appBinaryRelativePath} needs a rescan.");
+                                    appBinariesToUpdate.Add(await AppBinaryHelper.GetAppBinaryAsync(_logger, fsFiles, currentFolder, config.ChunkSizeBytes, appBinaryRelativePath, ct: ct));
+                                }
+                                else
+                                {
+                                    _logger?.LogInformation($"DoFullScanAsync: App binary {appBinaryRelativePath} is already up to date.");
+                                    appBinariesUpToDateRelPaths.Add(appBinaryRelativePath);
+                                }
                             }
                             else
                             {
                                 foreach (var folder in Directory.EnumerateDirectories(currentFolder, "*", SearchOption.TopDirectoryOnly))
                                 {
-                                    ScanUntilAnyFileRecursively(folder);
+                                    await ScanUntilAnyFileRecursively(folder);
                                 }
                             }
                         }
@@ -55,19 +78,36 @@ namespace Sentinel.Plugin.SubFolder
                     }
                     else if (config.ScanPolicy == ScanPolicy.UntilNoFolder)
                     {
-                        ScanUntilNoFolderRecursively(folder);
+                        await ScanUntilNoFolderRecursively(folder);
 
                         #region local function
-                        void ScanUntilNoFolderRecursively(string currentFolder)
+                        async Task ScanUntilNoFolderRecursively(string currentFolder)
                         {
                             var currentDirFolders = Directory.EnumerateDirectories(currentFolder, "*", SearchOption.TopDirectoryOnly);
                             if (!currentDirFolders.Any())
                             {
                                 _logger?.LogDebug($"DoFullScanAsync: No folders found in {currentFolder}.");
+                                var appBinaryRelativePath = Path.GetRelativePath(config.LibraryFolder, currentFolder);
                                 var currentDirFiles = Directory.EnumerateFiles(currentFolder, "*", SearchOption.TopDirectoryOnly);
                                 if (currentDirFiles.Any())
                                 {
                                     _logger?.LogDebug($"DoFullScanAsync: Files found in {currentFolder}.");
+                                    var fsFiles = Directory.EnumerateFiles(currentFolder, "*", SearchOption.AllDirectories);
+                                    if (!appBinaries.Any(ab => ab.Path == appBinaryRelativePath))
+                                    {
+                                        _logger?.LogInformation($"DoFullScanAsync: Adding app binary {appBinaryRelativePath}.");
+                                        appBinariesToAdd.Add(await AppBinaryHelper.GetAppBinaryAsync(_logger, fsFiles, currentFolder, config.ChunkSizeBytes, appBinaryRelativePath, ct: ct));
+                                    }
+                                    else if (AppBinaryHelper.NeedRescan(_logger, config.LibraryFolder, appBinaries.Single(ab => ab.Path == appBinaryRelativePath), fsFiles))
+                                    {
+                                        _logger?.LogInformation($"DoFullScanAsync: App binary {appBinaryRelativePath} needs a rescan.");
+                                        appBinariesToUpdate.Add(await AppBinaryHelper.GetAppBinaryAsync(_logger, fsFiles, currentFolder, config.ChunkSizeBytes, appBinaryRelativePath, ct: ct));
+                                    }
+                                    else
+                                    {
+                                        _logger?.LogInformation($"DoFullScanAsync: App binary {appBinaryRelativePath} is already up to date.");
+                                        appBinariesUpToDateRelPaths.Add(appBinaryRelativePath);
+                                    }
                                 }
                                 else
                                 {
@@ -79,7 +119,7 @@ namespace Sentinel.Plugin.SubFolder
                             {
                                 foreach (var folder in currentDirFolders)
                                 {
-                                    ScanUntilNoFolderRecursively(folder);
+                                    await ScanUntilNoFolderRecursively(folder);
                                 }
                             }
                         }
@@ -90,6 +130,12 @@ namespace Sentinel.Plugin.SubFolder
                         throw new ArgumentOutOfRangeException(nameof(config.ScanPolicy), config.ScanPolicy, "Invalid scan policy.");
                     }
                 }
+
+                appBinariesToRemove = appBinaries
+                    .Where(ab => !appBinariesUpToDateRelPaths.Contains(ab.Path) &&
+                        !appBinariesToAdd.Select(ab => ab.Path).Contains(ab.Path) &&
+                        !appBinariesToUpdate.Select(ab => ab.Path).Contains(ab.Path))
+                    .ToList();
 
                 return new ScanChangeResult
                 {

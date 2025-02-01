@@ -58,6 +58,7 @@ namespace Sentinel
             });
             s_pluginServices.AddTransient<IPlugin, Plugin.SingleFile.SingleFile>();
             s_pluginServices.AddTransient<IPlugin, Plugin.PythonPluginLoader.PythonPluginLoader>();
+            s_pluginServices.AddTransient<IPlugin, Plugin.SubFolder.SubFolder>();
 
             Parser.Default.ParseArguments<DaemonOptions, Plugin.SingleFile.CmdOptions, Plugin.PythonPluginLoader.CmdOptions>(argsList)
                 .WithParsed<DaemonOptions>(o => RunDaemon(o, args))
@@ -138,6 +139,7 @@ namespace Sentinel
             // load built-in plugins
             builder.Services.AddKeyedTransient<IPlugin, Plugin.SingleFile.SingleFile>("SingleFile");
             builder.Services.AddKeyedTransient<IPlugin, Plugin.PythonPluginLoader.PythonPluginLoader>("PythonPluginLoader");
+            builder.Services.AddKeyedTransient<IPlugin, Plugin.SubFolder.SubFolder>("SubFolder");
 
             // load plugins
             PluginHelper.LoadPlugins(s_logger, builder.Services, systemConfig.PluginBaseDir);

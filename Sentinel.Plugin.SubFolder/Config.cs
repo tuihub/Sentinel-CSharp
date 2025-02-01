@@ -4,17 +4,17 @@ namespace Sentinel.Plugin.SubFolder
 {
     public class Config : ConfigBase
     {
-        private int _maxDepth = 1;
+        private int _minDepth = 1;
         public int MinDepth
         {
-            get => _maxDepth;
+            get => _minDepth;
             set
             {
                 if (value < 1)
                 {
                     throw new ArgumentOutOfRangeException(nameof(value), "MinDepth must be greater than or equal to 1.");
                 }
-                _maxDepth = value;
+                _minDepth = value;
             }
         }
         public ScanPolicy ScanPolicy { get; set; } = ScanPolicy.UntilAnyFile;
