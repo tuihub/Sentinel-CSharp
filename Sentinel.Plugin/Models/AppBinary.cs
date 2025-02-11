@@ -23,7 +23,8 @@
             return Name.Equals(other.Name) &&
                    Path.Equals(other.Path) &&
                    SizeBytes.Equals(other.SizeBytes) &&
-                   Guid.Equals(other.Guid) &&
+                   // UNDONE: Not comparing Guid because it's now a random value
+                   // Guid.Equals(other.Guid) &&
                    Files.SequenceEqual(other.Files);
         }
 
