@@ -14,6 +14,13 @@ class FileEntryChunk:
         self.size_bytes: int = size_bytes
         self.sha256: bytes = sha256
 
+    def __eq__(self, other: 'FileEntryChunk') -> bool:
+        if other is not FileEntryChunk:
+            return False
+        return (self.offset_bytes == other.offset_bytes and
+                self.size_bytes == other.size_bytes and
+                self.sha256 == other.sha256)
+
     def to_dict(self) -> dict:
         return {
             'offset_bytes': self.offset_bytes,
@@ -30,6 +37,15 @@ class FileEntry:
         self.sha256: bytes = sha256
         self.chunks: list[FileEntryChunk] = chunks
         self.last_write_utc: datetime.datetime = last_write_utc
+
+    def __eq__(self, other: 'FileEntry') -> bool:
+        if other is not FileEntry:
+            return False
+        return (self.path == other.path and
+                self.size_bytes == other.size_bytes and
+                self.sha256 == other.sha256 and
+                self.chunks == other.chunks and
+                self.last_write_utc == other.last_write_utc)
 
     def to_dict(self) -> dict:
         return {
@@ -48,6 +64,16 @@ class AppBinary:
         self.size_bytes: int = size_bytes
         self.files: list[FileEntry] = files
         self.guid: uuid.UUID = guid
+
+    def __eq__(self, other: 'AppBinary') -> bool:
+        if other is not AppBinary:
+            return False
+        return (self.name == other.name and
+                self.path == other.path and
+                self.size_bytes == other.size_bytes and
+                # UNDONE: Not comparing Guid because it's now a random value
+                # self.guid == other.guid and
+                self.files == other.files)
 
     def to_dict(self) -> dict:
         return {

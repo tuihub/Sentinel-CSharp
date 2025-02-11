@@ -77,11 +77,10 @@ namespace Sentinel.Plugin.PythonPluginLoader {
         ///        self.size_bytes: int = size_bytes
         ///        self.sha256: bytes = sha256
         ///
-        ///    def to_dict(self) -&gt; dict:
-        ///        return {
-        ///            &apos;offset_bytes&apos;: self.offset_bytes,
-        ///            &apos;size_bytes&apos;: self.size_bytes,
-        ///            &apos;sha256&apos;: ba [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        ///    def __eq__(self, other: &apos;FileEntryChunk&apos;) -&gt; bool:
+        ///        if other is not FileEntryChunk:
+        ///            return False
+        ///        return (self.offset_bytes == other. [字符串的其余部分被截断]&quot;; 的本地化字符串。
         /// </summary>
         internal static string PluginBase {
             get {
