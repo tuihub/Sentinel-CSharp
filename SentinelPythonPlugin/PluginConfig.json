@@ -1,6 +1,6 @@
 {
   "LibraryName": "Library1",
-  "LibraryFolder": "E:\\tui2\\黄昏的禁忌之药\\补丁",
+  "LibraryFolder": "/path/to/library1",
   "ChunkSizeBytes": "67108864",
   "ForceCalcDigest": "false",
   "PythonScriptPath": "python_plugins/SingleFile.py",
