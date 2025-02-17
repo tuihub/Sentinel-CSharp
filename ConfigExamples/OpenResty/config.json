@@ -1,0 +1,9 @@
+{
+    "librarian_hs256_key": "YOUR_LIBRARIAN_HS256_KEY",
+    "filedl_hs256_key": "YOUR_FILEDL_HS256_KEY",
+    "filedl_expsec_pergib": 10240,
+    "filedl_aes_key": "YOUR_FILEDL_AES_KEY",
+    "base_dir_id_path_map": {
+        "1": "/path/to/base_dir_1"
+    }
+}
