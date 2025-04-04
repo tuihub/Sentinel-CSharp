@@ -13,7 +13,7 @@ using Sentinel.Plugin.Contracts;
 using Sentinel.Services;
 using Sentinel.Workers;
 using System.Diagnostics;
-using TuiHub.Protos.Librarian.Sephirah.V1;
+using TuiHub.Protos.Librarian.Sephirah.V1.Sentinel;
 
 namespace Sentinel
 {
@@ -119,7 +119,7 @@ namespace Sentinel
             if (options.NoReportToServer)
             {
                 builder.Services.AddSingleton<LoggingOnlyInterceptor>();
-                builder.Services.AddGrpcClient<LibrarianSephirahService.LibrarianSephirahServiceClient>(o =>
+                builder.Services.AddGrpcClient<LibrarianSentinelService.LibrarianSentinelServiceClient>(o =>
                 {
                     o.Address = new Uri("http://127.0.0.1");
                 })
@@ -128,7 +128,7 @@ namespace Sentinel
             else
             {
                 builder.Services.AddSingleton<ClientTokenInterceptor>();
-                builder.Services.AddGrpcClient<LibrarianSephirahService.LibrarianSephirahServiceClient>(o =>
+                builder.Services.AddGrpcClient<LibrarianSentinelService.LibrarianSentinelServiceClient>(o =>
                 {
                     o.Address = new Uri(systemConfig.LibrarianUrl);
                 })

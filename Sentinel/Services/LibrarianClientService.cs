@@ -3,10 +3,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sentinel.Configs;
-using Sentinel.Helpers;
 using Sentinel.Plugin.Configs;
-using TuiHub.Protos.Librarian.Sephirah.V1;
-using static TuiHub.Protos.Librarian.Sephirah.V1.LibrarianSephirahService;
+using TuiHub.Protos.Librarian.Sephirah.V1.Sentinel;
+using static TuiHub.Protos.Librarian.Sephirah.V1.Sentinel.LibrarianSentinelService;
 
 namespace Sentinel.Services
 {
@@ -17,7 +16,7 @@ namespace Sentinel.Services
         private readonly SentinelConfig _sentinelConfig;
         private readonly IServiceScopeFactory _serviceScopeFactory;
 
-        public LibrarianClientService(ILogger<LibrarianClientService> logger, SystemConfig systemConfig, SentinelConfig sentinelConfig, 
+        public LibrarianClientService(ILogger<LibrarianClientService> logger, SystemConfig systemConfig, SentinelConfig sentinelConfig,
             IServiceScopeFactory serviceScopeFactory)
         {
             _logger = logger;
@@ -31,18 +30,18 @@ namespace Sentinel.Services
             using (var scope = _serviceScopeFactory.CreateScope())
             {
                 using var dbContext = scope.ServiceProvider.GetRequiredService<SentinelDbContext>();
-                var client = scope.ServiceProvider.GetRequiredService<LibrarianSephirahServiceClient>();
+                var client = scope.ServiceProvider.GetRequiredService<LibrarianSentinelServiceClient>();
                 _logger.LogInformation("Reporting Sentinel information");
                 var request = new ReportSentinelInformationRequest()
                 {
-                    Scheme = ProtoHelper.ToServerScheme(_sentinelConfig.Scheme),
+                    Url = _sentinelConfig.Urls.FirstOrDefault(),
                     GetTokenUrlPath = _sentinelConfig.GetTokenUrlPath,
-                    DownloadFileUrlPath = _sentinelConfig.DownloadFileUrlPath
+                    DownloadFileBasePath = _sentinelConfig.DownloadFileUrlPath
                 };
-                request.Hostnames.AddRange(_sentinelConfig.Hostnames);
+                request.UrlAlternatives.AddRange(_sentinelConfig.Urls.Skip(1));
                 request.Libraries.AddRange(
                     _systemConfig.LibraryConfigs
-                    .Select(x => new ReportSentinelInformationRequest.Types.SentinelLibrary
+                    .Select(x => new SentinelLibrary
                     {
                         Id = dbContext.AppBinaryBaseDirs.Single(d => d.Path == x.PluginConfig.Get<ConfigBase>()!.LibraryFolder).Id,
                         DownloadBasePath = x.DownloadBasePath
@@ -56,7 +55,7 @@ namespace Sentinel.Services
             using (var scope = _serviceScopeFactory.CreateScope())
             {
                 using var dbContext = scope.ServiceProvider.GetRequiredService<SentinelDbContext>();
-                var client = scope.ServiceProvider.GetRequiredService<LibrarianSephirahServiceClient>();
+                var client = scope.ServiceProvider.GetRequiredService<LibrarianSentinelServiceClient>();
                 _logger.LogInformation("Reporting AppBinaries");
                 var libraryPaths = _systemConfig.LibraryConfigs.Select(x => x.PluginConfig.Get<ConfigBase>()!.LibraryFolder).ToList();
                 var sentinelAppBinaries = dbContext.AppBinaries
@@ -64,14 +63,9 @@ namespace Sentinel.Services
                     .Where(x => libraryPaths.Contains(x.AppBinaryBaseDir.Path))
                     .Include(x => x.Files)
                     .ThenInclude(x => x.Chunks)
-                    .Select(x => new ReportAppBinariesRequest.Types.SentinelAppBinary
-                    {
-                        AppBinary = x.ToProto(_sentinelConfig.NeedToken),
-                        SentinelLibraryId = x.AppBinaryBaseDir.Id,
-                        SentinelGeneratedId = x.Guid.ToString()
-                    });
+                    .Select(x => x.ToProto(_sentinelConfig.NeedToken));
                 var request = new ReportAppBinariesRequest();
-                request.SentinelAppBinaries.AddRange(sentinelAppBinaries);
+                request.AppBinaries.AddRange(sentinelAppBinaries);
                 return await client.ReportAppBinariesAsync(request, cancellationToken: ct);
             }
         }

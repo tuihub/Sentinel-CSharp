@@ -4,7 +4,8 @@ using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
 using Sentinel.Services;
 using TuiHub.Protos.Librarian.Sephirah.V1;
-using static TuiHub.Protos.Librarian.Sephirah.V1.LibrarianSephirahService;
+using TuiHub.Protos.Librarian.Sephirah.V1.Sentinel;
+using static TuiHub.Protos.Librarian.Sephirah.V1.Sentinel.LibrarianSentinelService;
 
 namespace Sentinel.Interceptors
 {
@@ -54,7 +55,7 @@ namespace Sentinel.Interceptors
             {
                 { "Authorization", $"Bearer {refreshToken}" }
             };
-            var client = new LibrarianSephirahServiceClient(GrpcChannel.ForAddress(_stateService.SystemConfig.LibrarianUrl));
+            var client = new LibrarianSentinelServiceClient(GrpcChannel.ForAddress(_stateService.SystemConfig.LibrarianUrl));
             var token = await client.RefreshTokenAsync(new RefreshTokenRequest(), headers, cancellationToken: ct);
             ct.ThrowIfCancellationRequested();
             return (token.AccessToken, token.RefreshToken);

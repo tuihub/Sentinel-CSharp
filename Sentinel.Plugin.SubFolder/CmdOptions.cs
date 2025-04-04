@@ -3,7 +3,7 @@ using Sentinel.Plugin.Configs;
 
 namespace Sentinel.Plugin.SubFolder
 {
-    [Verb("subfolder", aliases: ["sb"], HelpText = "A plugin that handles files in sub folders using policies.")]
+    [Verb("subfolder", aliases: ["subf"], HelpText = "A plugin that handles files in sub folders using policies.")]
     public class CmdOptions : CmdOptionsBase
     {
         [Option("min-depth", Required = false, Default = 1, HelpText = "Scan min depth.")]

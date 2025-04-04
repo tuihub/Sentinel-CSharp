@@ -1,5 +1,4 @@
-﻿using Google.Protobuf;
-using Sentinel.Attributes;
+﻿using Sentinel.Attributes;
 using System.ComponentModel.DataAnnotations;
 
 namespace Sentinel.Models.Db
@@ -27,15 +26,6 @@ namespace Sentinel.Models.Db
         public Plugin.Models.FileEntryChunk ToPluginModel()
         {
             return new Plugin.Models.FileEntryChunk(OffsetBytes, SizeBytes, Sha256);
-        }
-        public TuiHub.Protos.Librarian.Sephirah.V1.AppBinaryFileChunk ToProto()
-        {
-            return new TuiHub.Protos.Librarian.Sephirah.V1.AppBinaryFileChunk
-            {
-                OffsetBytes = OffsetBytes,
-                SizeBytes = SizeBytes,
-                Sha256 = UnsafeByteOperations.UnsafeWrap(Sha256.AsMemory())
-            };
         }
     }
 }

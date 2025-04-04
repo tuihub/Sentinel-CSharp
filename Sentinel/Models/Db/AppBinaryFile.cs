@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Sentinel.Attributes;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 
 namespace Sentinel.Models.Db
 {
@@ -35,15 +36,16 @@ namespace Sentinel.Models.Db
         {
             return new Plugin.Models.FileEntry(Path, SizeBytes, Sha256, Chunks.Select(x => x.ToPluginModel()), LastWriteUtc);
         }
-        public TuiHub.Protos.Librarian.Sephirah.V1.AppBinaryFile ToProto()
+        public TuiHub.Protos.Librarian.Sephirah.V1.Sentinel.SentinelLibraryAppBinaryFile ToProto()
         {
-            return new TuiHub.Protos.Librarian.Sephirah.V1.AppBinaryFile
+            return new TuiHub.Protos.Librarian.Sephirah.V1.Sentinel.SentinelLibraryAppBinaryFile
             {
                 Name = System.IO.Path.GetFileName(Path),
                 SizeBytes = SizeBytes,
                 Sha256 = UnsafeByteOperations.UnsafeWrap(Sha256.AsMemory()),
                 ServerFilePath = Path,
-                Chunks = { Chunks.Select(x => x.ToProto()) }
+
+                ChunksInfo = JsonSerializer.Serialize(Chunks),
             };
         }
     }

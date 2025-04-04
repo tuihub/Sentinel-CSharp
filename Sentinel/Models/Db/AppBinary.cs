@@ -38,14 +38,20 @@ namespace Sentinel.Models.Db
         {
             return new Plugin.Models.AppBinary(Name, Path, SizeBytes, Files.Select(x => x.ToPluginModel()), Guid);
         }
-        public TuiHub.Protos.Librarian.Sephirah.V1.AppBinary ToProto(bool needToken)
+        public TuiHub.Protos.Librarian.Sephirah.V1.Sentinel.SentinelLibraryAppBinary ToProto(bool needToken)
         {
-            return new TuiHub.Protos.Librarian.Sephirah.V1.AppBinary
+            return new TuiHub.Protos.Librarian.Sephirah.V1.Sentinel.SentinelLibraryAppBinary
             {
-                Name = Name,
+                SentinelLibraryId = Id,
+                SentinelGeneratedId = Guid.ToString(),
                 SizeBytes = SizeBytes,
                 NeedToken = needToken,
-                Files = { Files.Select(x => x.ToProto()) }
+                Files = { Files.Select(x => x.ToProto()) },
+
+                Name = Name,
+                //Version = string.Empty,
+                //Developer = string.Empty,
+                //Publisher = string.Empty,
             };
         }
     }
