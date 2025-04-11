@@ -7,7 +7,7 @@ namespace Sentinel.Plugin.Helpers
     {
         public static bool NeedRescan(ILogger? logger, string libraryFolder, AppBinary dbAppBinary, IEnumerable<string> fsFiles)
         {
-            var fsBasePath = Path.Combine(libraryFolder, dbAppBinary.Path);
+            var fsBasePath = libraryFolder;
             if (fsFiles.Count() != dbAppBinary.Files.Count())
             {
                 logger?.LogDebug($"NeedRescan: Number of files in {fsBasePath} is different, need to rescan.");
