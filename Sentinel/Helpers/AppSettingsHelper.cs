@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Sentinel.Configs;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Sentinel.Helpers
 {
@@ -11,13 +12,14 @@ namespace Sentinel.Helpers
         public static void UpdateSystemConfig(SystemConfig systemConfig, IHostEnvironment hostEnvironment)
         {
             var appSettingsPath = Path.Join(hostEnvironment.ContentRootPath, $"appsettings.{hostEnvironment.EnvironmentName}.json");
-            if (!File.Exists(appSettingsPath))
+            if (!File.Exists(appSettingsPath) || JsonNode.Parse(File.ReadAllText(appSettingsPath))?["SystemConfig"] == null)
             {
                 appSettingsPath = Path.Join(hostEnvironment.ContentRootPath, "appsettings.json");
             }
-            var appSettingsObj = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(appSettingsPath));
-            appSettingsObj!.SystemConfig = systemConfig;
-            File.WriteAllText(appSettingsPath, JsonSerializer.Serialize(appSettingsObj, s_jsonSerializerOptions));
+
+            var jsonNode = JsonNode.Parse(File.ReadAllText(appSettingsPath))!;
+            jsonNode["SystemConfig"]!["LibrarianRefreshToken"] = systemConfig.LibrarianRefreshToken;
+            File.WriteAllText(appSettingsPath, jsonNode.ToJsonString(s_jsonSerializerOptions));
         }
     }
 }
