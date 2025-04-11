@@ -60,7 +60,13 @@ namespace Sentinel
             s_pluginServices.AddTransient<IPlugin, Plugin.PythonPluginLoader.PythonPluginLoader>();
             s_pluginServices.AddTransient<IPlugin, Plugin.SubFolder.SubFolder>();
 
-            Parser.Default.ParseArguments<DaemonOptions, Plugin.SingleFile.CmdOptions, Plugin.PythonPluginLoader.CmdOptions>(argsList)
+            var parser = new Parser(s =>
+            {
+                s.CaseSensitive = false;
+                s.AutoHelp = false;
+            });
+
+            parser.ParseArguments<DaemonOptions, Plugin.SingleFile.CmdOptions, Plugin.PythonPluginLoader.CmdOptions>(argsList)
                 .WithParsed<DaemonOptions>(o => RunDaemon(o, args))
                 .WithParsed<Plugin.SingleFile.CmdOptions>(o => RunOnce(o))
                 .WithParsed<Plugin.PythonPluginLoader.CmdOptions>(o => RunOnce(o))
@@ -74,8 +80,12 @@ namespace Sentinel
             var optionTypes = pluginServiceProvider.GetServices<IPlugin>()
                 .Select(p => p.CmdOptions)
                 .Select(o => o.GetType());
-            Parser.Default.ParseArguments(argsList, optionTypes.ToArray())
-                          .WithParsed(o => RunOnce((o as CmdOptionsBase)!));
+            var parser = new Parser(s =>
+            {
+                s.CaseSensitive = false;
+            });
+            parser.ParseArguments(argsList, optionTypes.ToArray())
+                  .WithParsed(o => RunOnce((o as CmdOptionsBase)!));
         }
 
         private static void RunOnce(CmdOptionsBase options)
