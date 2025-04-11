@@ -11,14 +11,14 @@ using Sentinel;
 namespace Sentinel.Migrations
 {
     [DbContext(typeof(SentinelDbContext))]
-    [Migration("20250107123624_Initial")]
-    partial class Initial
+    [Migration("20250411083258_V0_1_0")]
+    partial class V0_1_0
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.0");
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.4");
 
             modelBuilder.Entity("Sentinel.Models.Db.AppBinary", b =>
                 {
@@ -34,12 +34,12 @@ namespace Sentinel.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(512)
+                        .HasMaxLength(511)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Path")
                         .IsRequired()
-                        .HasMaxLength(4096)
+                        .HasMaxLength(4095)
                         .HasColumnType("TEXT");
 
                     b.Property<long>("SizeBytes")
@@ -75,6 +75,8 @@ namespace Sentinel.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
+                    b.HasIndex("Path");
+
                     b.ToTable("AppBinaryBaseDirs");
                 });
 
@@ -84,7 +86,7 @@ namespace Sentinel.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<long?>("AppBinaryId")
+                    b.Property<long>("AppBinaryId")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("LastWriteUtc")
@@ -92,7 +94,7 @@ namespace Sentinel.Migrations
 
                     b.Property<string>("Path")
                         .IsRequired()
-                        .HasMaxLength(4096)
+                        .HasMaxLength(4095)
                         .HasColumnType("TEXT");
 
                     b.Property<byte[]>("Sha256")
@@ -110,7 +112,7 @@ namespace Sentinel.Migrations
 
                     b.HasIndex("Path");
 
-                    b.ToTable("AppBinaryFile");
+                    b.ToTable("AppBinaryFiles");
                 });
 
             modelBuilder.Entity("Sentinel.Models.Db.AppBinaryFileChunk", b =>
@@ -119,7 +121,7 @@ namespace Sentinel.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<long?>("AppBinaryFileId")
+                    b.Property<long>("AppBinaryFileId")
                         .HasColumnType("INTEGER");
 
                     b.Property<long>("OffsetBytes")
@@ -138,7 +140,7 @@ namespace Sentinel.Migrations
 
                     b.HasIndex("AppBinaryFileId");
 
-                    b.ToTable("AppBinaryFileChunk");
+                    b.ToTable("AppBinaryFileChunks");
                 });
 
             modelBuilder.Entity("Sentinel.Models.Db.AppBinary", b =>
@@ -154,16 +156,24 @@ namespace Sentinel.Migrations
 
             modelBuilder.Entity("Sentinel.Models.Db.AppBinaryFile", b =>
                 {
-                    b.HasOne("Sentinel.Models.Db.AppBinary", null)
+                    b.HasOne("Sentinel.Models.Db.AppBinary", "AppBinary")
                         .WithMany("Files")
-                        .HasForeignKey("AppBinaryId");
+                        .HasForeignKey("AppBinaryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AppBinary");
                 });
 
             modelBuilder.Entity("Sentinel.Models.Db.AppBinaryFileChunk", b =>
                 {
-                    b.HasOne("Sentinel.Models.Db.AppBinaryFile", null)
+                    b.HasOne("Sentinel.Models.Db.AppBinaryFile", "AppBinaryFile")
                         .WithMany("Chunks")
-                        .HasForeignKey("AppBinaryFileId");
+                        .HasForeignKey("AppBinaryFileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AppBinaryFile");
                 });
 
             modelBuilder.Entity("Sentinel.Models.Db.AppBinary", b =>

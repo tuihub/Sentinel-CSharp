@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Sentinel.Attributes;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Sentinel.Models.Db
 {
@@ -11,7 +12,7 @@ namespace Sentinel.Models.Db
     {
         [Key]
         public long Id { get; set; }
-        [MaxLength(4096)]
+        [MaxLength(4095)]
         public string Path { get; set; } = null!;
         public long SizeBytes { get; set; }
         [IsFixedLength]
@@ -19,6 +20,13 @@ namespace Sentinel.Models.Db
         public byte[] Sha256 { get; set; } = null!;
         public ICollection<AppBinaryFileChunk> Chunks { get; set; } = null!;
         public DateTime LastWriteUtc { get; set; }
+
+        // relation
+        // one-to-many relation (required, to parent)
+        [JsonIgnore]
+        public long AppBinaryId { get; set; }
+        [JsonIgnore]
+        public AppBinary AppBinary { get; set; } = null!;
 
         // constructor
         public AppBinaryFile() { }

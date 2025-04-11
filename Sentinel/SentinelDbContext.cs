@@ -12,6 +12,8 @@ namespace Sentinel
 
         public DbSet<AppBinaryBaseDir> AppBinaryBaseDirs { get; set; } = null!;
         public DbSet<AppBinary> AppBinaries { get; set; } = null!;
+        public DbSet<AppBinaryFile> AppBinaryFiles { get; set; } = null!;
+        public DbSet<AppBinaryFileChunk> AppBinaryFileChunks { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

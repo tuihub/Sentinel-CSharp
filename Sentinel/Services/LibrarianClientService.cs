@@ -35,7 +35,7 @@ namespace Sentinel.Services
                 var request = new ReportSentinelInformationRequest()
                 {
                     Url = _sentinelConfig.Urls.FirstOrDefault(),
-                    GetTokenUrlPath = _sentinelConfig.GetTokenUrlPath,
+                    GetTokenPath = _sentinelConfig.GetTokenUrlPath,
                     DownloadFileBasePath = _sentinelConfig.DownloadFileUrlPath
                 };
                 request.UrlAlternatives.AddRange(_sentinelConfig.Urls.Skip(1));

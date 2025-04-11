@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Sentinel.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class V0_1_0 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -31,8 +31,8 @@ namespace Sentinel.Migrations
                 {
                     Id = table.Column<long>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 512, nullable: false),
-                    Path = table.Column<string>(type: "TEXT", maxLength: 4096, nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 511, nullable: false),
+                    Path = table.Column<string>(type: "TEXT", maxLength: 4095, nullable: false),
                     SizeBytes = table.Column<long>(type: "INTEGER", nullable: false),
                     Guid = table.Column<Guid>(type: "TEXT", nullable: false),
                     AppBinaryBaseDirId = table.Column<long>(type: "INTEGER", nullable: false)
@@ -49,29 +49,30 @@ namespace Sentinel.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "AppBinaryFile",
+                name: "AppBinaryFiles",
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Path = table.Column<string>(type: "TEXT", maxLength: 4096, nullable: false),
+                    Path = table.Column<string>(type: "TEXT", maxLength: 4095, nullable: false),
                     SizeBytes = table.Column<long>(type: "INTEGER", nullable: false),
                     Sha256 = table.Column<byte[]>(type: "BLOB", fixedLength: true, maxLength: 32, nullable: false),
                     LastWriteUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    AppBinaryId = table.Column<long>(type: "INTEGER", nullable: true)
+                    AppBinaryId = table.Column<long>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_AppBinaryFile", x => x.Id);
+                    table.PrimaryKey("PK_AppBinaryFiles", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_AppBinaryFile_AppBinaries_AppBinaryId",
+                        name: "FK_AppBinaryFiles_AppBinaries_AppBinaryId",
                         column: x => x.AppBinaryId,
                         principalTable: "AppBinaries",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "AppBinaryFileChunk",
+                name: "AppBinaryFileChunks",
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "INTEGER", nullable: false)
@@ -79,16 +80,17 @@ namespace Sentinel.Migrations
                     OffsetBytes = table.Column<long>(type: "INTEGER", nullable: false),
                     SizeBytes = table.Column<long>(type: "INTEGER", nullable: false),
                     Sha256 = table.Column<byte[]>(type: "BLOB", fixedLength: true, maxLength: 32, nullable: false),
-                    AppBinaryFileId = table.Column<long>(type: "INTEGER", nullable: true)
+                    AppBinaryFileId = table.Column<long>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_AppBinaryFileChunk", x => x.Id);
+                    table.PrimaryKey("PK_AppBinaryFileChunks", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_AppBinaryFileChunk_AppBinaryFile_AppBinaryFileId",
+                        name: "FK_AppBinaryFileChunks_AppBinaryFiles_AppBinaryFileId",
                         column: x => x.AppBinaryFileId,
-                        principalTable: "AppBinaryFile",
-                        principalColumn: "Id");
+                        principalTable: "AppBinaryFiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -113,29 +115,34 @@ namespace Sentinel.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_AppBinaryFile_AppBinaryId",
-                table: "AppBinaryFile",
-                column: "AppBinaryId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_AppBinaryFile_Path",
-                table: "AppBinaryFile",
+                name: "IX_AppBinaryBaseDirs_Path",
+                table: "AppBinaryBaseDirs",
                 column: "Path");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AppBinaryFileChunk_AppBinaryFileId",
-                table: "AppBinaryFileChunk",
+                name: "IX_AppBinaryFileChunks_AppBinaryFileId",
+                table: "AppBinaryFileChunks",
                 column: "AppBinaryFileId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AppBinaryFiles_AppBinaryId",
+                table: "AppBinaryFiles",
+                column: "AppBinaryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AppBinaryFiles_Path",
+                table: "AppBinaryFiles",
+                column: "Path");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "AppBinaryFileChunk");
+                name: "AppBinaryFileChunks");
 
             migrationBuilder.DropTable(
-                name: "AppBinaryFile");
+                name: "AppBinaryFiles");
 
             migrationBuilder.DropTable(
                 name: "AppBinaries");

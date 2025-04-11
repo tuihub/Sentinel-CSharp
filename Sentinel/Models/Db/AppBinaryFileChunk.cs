@@ -1,5 +1,6 @@
 ﻿using Sentinel.Attributes;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Sentinel.Models.Db
 {
@@ -12,6 +13,13 @@ namespace Sentinel.Models.Db
         [IsFixedLength]
         [MaxLength(32)]
         public byte[] Sha256 { get; set; } = null!;
+
+        // relation
+        // one-to-many relation (required, to parent)
+        [JsonIgnore]
+        public long AppBinaryFileId { get; set; }
+        [JsonIgnore]
+        public AppBinaryFile AppBinaryFile { get; set; } = null!;
 
         // constructor
         public AppBinaryFileChunk() { }

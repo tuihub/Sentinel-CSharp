@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Sentinel.Models.Db
 {
@@ -9,16 +10,19 @@ namespace Sentinel.Models.Db
     {
         [Key]
         public long Id { get; set; }
-        [MaxLength(512)]
+        [MaxLength(511)]
         public string Name { get; set; } = null!;
-        [MaxLength(4096)]
+        [MaxLength(4095)]
         public string Path { get; set; } = null!;
         public long SizeBytes { get; set; }
         public ICollection<AppBinaryFile> Files { get; set; } = null!;
         public Guid Guid { get; set; }
+
         // relation
         // one-to-many relation (required, to parent)
+        [JsonIgnore]
         public long AppBinaryBaseDirId { get; set; }
+        [JsonIgnore]
         public AppBinaryBaseDir AppBinaryBaseDir { get; set; } = null!;
 
         // constructor

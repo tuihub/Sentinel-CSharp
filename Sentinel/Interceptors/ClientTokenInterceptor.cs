@@ -3,7 +3,6 @@ using Grpc.Core.Interceptors;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
 using Sentinel.Services;
-using TuiHub.Protos.Librarian.Sephirah.V1;
 using TuiHub.Protos.Librarian.Sephirah.V1.Sentinel;
 using static TuiHub.Protos.Librarian.Sephirah.V1.Sentinel.LibrarianSentinelService;
 
