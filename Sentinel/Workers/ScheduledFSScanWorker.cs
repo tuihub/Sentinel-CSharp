@@ -55,6 +55,7 @@ namespace Sentinel.Workers
                             .Where(x => x.AppBinaryBaseDir.Path == _plugin.Config.LibraryFolder)
                             .Include(x => x.Files)
                             .ThenInclude(x => x.Chunks)
+                            .AsNoTracking()
                             .Select(x => x.ToPluginModel()),
                             stoppingToken);
                         stoppingToken.ThrowIfCancellationRequested();

@@ -63,7 +63,8 @@ namespace Sentinel.Services
                     .Where(x => libraryPaths.Contains(x.AppBinaryBaseDir.Path))
                     .Include(x => x.Files)
                     .ThenInclude(x => x.Chunks)
-                    .Select(x => x.ToProto(_sentinelConfig.NeedToken));
+                    .AsNoTracking()
+                    .Select(x => x.ToPB(_sentinelConfig.NeedToken));
                 var request = new ReportAppBinariesRequest();
                 request.AppBinaries.AddRange(sentinelAppBinaries);
                 return await client.ReportAppBinariesAsync(request, cancellationToken: ct);

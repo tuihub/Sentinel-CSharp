@@ -42,7 +42,7 @@ namespace Sentinel.Models.Db
         {
             return new Plugin.Models.AppBinary(Name, Path, SizeBytes, Files.Select(x => x.ToPluginModel()), Guid);
         }
-        public TuiHub.Protos.Librarian.Sephirah.V1.Sentinel.SentinelLibraryAppBinary ToProto(bool needToken)
+        public TuiHub.Protos.Librarian.Sephirah.V1.Sentinel.SentinelLibraryAppBinary ToPB(bool needToken)
         {
             return new TuiHub.Protos.Librarian.Sephirah.V1.Sentinel.SentinelLibraryAppBinary
             {
@@ -50,7 +50,7 @@ namespace Sentinel.Models.Db
                 SentinelGeneratedId = Guid.ToString(),
                 SizeBytes = SizeBytes,
                 NeedToken = needToken,
-                Files = { Files.Select(x => x.ToProto()) },
+                Files = { Files.Select(x => x.ToPB()) },
 
                 Name = Name,
                 //Version = string.Empty,
