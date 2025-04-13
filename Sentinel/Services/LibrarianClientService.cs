@@ -59,8 +59,8 @@ namespace Sentinel.Services
                 _logger.LogInformation("Reporting AppBinaries");
                 var libraryPaths = _systemConfig.LibraryConfigs.Select(x => x.PluginConfig.Get<ConfigBase>()!.LibraryFolder).ToList();
                 var sentinelAppBinaries = dbContext.AppBinaries
-                    .Include(x => x.AppBinaryBaseDir)
                     .Where(x => libraryPaths.Contains(x.AppBinaryBaseDir.Path))
+                    .Include(x => x.AppBinaryBaseDir)
                     .Include(x => x.Files)
                     .ThenInclude(x => x.Chunks)
                     .AsNoTracking()

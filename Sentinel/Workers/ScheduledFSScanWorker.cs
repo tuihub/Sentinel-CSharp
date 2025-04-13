@@ -51,8 +51,8 @@ namespace Sentinel.Workers
                         using var dbContext = scope.ServiceProvider.GetRequiredService<SentinelDbContext>();
                         var result = await _plugin.DoFullScanAsync(
                             dbContext.AppBinaries
-                            .Include(x => x.AppBinaryBaseDir)
                             .Where(x => x.AppBinaryBaseDir.Path == _plugin.Config.LibraryFolder)
+                            .Include(x => x.AppBinaryBaseDir)
                             .Include(x => x.Files)
                             .ThenInclude(x => x.Chunks)
                             .AsNoTracking()
