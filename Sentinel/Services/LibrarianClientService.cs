@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Google.Protobuf.WellKnownTypes;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -14,15 +15,34 @@ namespace Sentinel.Services
         private readonly ILogger<LibrarianClientService> _logger;
         private readonly SystemConfig _systemConfig;
         private readonly SentinelConfig _sentinelConfig;
+        private readonly StateService _stateService;
         private readonly IServiceScopeFactory _serviceScopeFactory;
 
         public LibrarianClientService(ILogger<LibrarianClientService> logger, SystemConfig systemConfig, SentinelConfig sentinelConfig,
-            IServiceScopeFactory serviceScopeFactory)
+            StateService stateService, IServiceScopeFactory serviceScopeFactory)
         {
             _logger = logger;
             _systemConfig = systemConfig;
             _sentinelConfig = sentinelConfig;
+            _stateService = stateService;
             _serviceScopeFactory = serviceScopeFactory;
+        }
+
+        public async Task<HeartbeatResponse> HeartbeatAsync(CancellationToken ct = default)
+        {
+            using (var scope = _serviceScopeFactory.CreateScope())
+            {
+                var client = scope.ServiceProvider.GetRequiredService<LibrarianSentinelServiceClient>();
+                _logger.LogInformation("Sending heartbeat");
+                var request = new HeartbeatRequest()
+                {
+                    InstanceId = _stateService.InstanceId,
+                    ClientTime = Timestamp.FromDateTime(DateTime.UtcNow),
+                    HeartbeatInterval = Duration.FromTimeSpan(TimeSpan.FromSeconds(_systemConfig.HeartbeatIntervalSeconds)),
+                    CommitSnapshotInterval = Duration.FromTimeSpan(TimeSpan.FromMinutes(_systemConfig.LibraryScanIntervalMinutes)),
+                };
+                return await client.HeartbeatAsync(request, cancellationToken: ct);
+            }
         }
 
         public async Task<ReportSentinelInformationResponse> ReportSentinelInformationAsync(CancellationToken ct = default)
@@ -65,9 +85,88 @@ namespace Sentinel.Services
                     .ThenInclude(x => x.Chunks)
                     .AsNoTracking()
                     .Select(x => x.ToPB(_sentinelConfig.NeedToken));
-                var request = new ReportAppBinariesRequest();
-                request.AppBinaries.AddRange(sentinelAppBinaries);
-                return await client.ReportAppBinariesAsync(request, cancellationToken: ct);
+                try
+                {
+                    if (_systemConfig.MaxPBMsgSizeBytes < 0)
+                    {
+                        var request = new ReportAppBinariesRequest()
+                        {
+                            SnapshotTime = Timestamp.FromDateTime(DateTime.UtcNow),
+                            CommitSnapshot = true
+                        };
+                        request.AppBinaries.AddRange(sentinelAppBinaries);
+                        return await client.ReportAppBinariesAsync(request, cancellationToken: ct);
+                    }
+                    // split into multiple messages if the size exceeds the limit
+                    else
+                    {
+                        var maxPBSizeBytes = (int)(_systemConfig.MaxPBMsgSizeBytes * 0.9); // reserve some space
+                        var snapshotTime = Timestamp.FromDateTime(DateTime.UtcNow);
+                        var appBinariesList = sentinelAppBinaries.ToList();
+                        int totalAppBinaries = appBinariesList.Count;
+                        int currentIndex = 0;
+                        ReportAppBinariesResponse? finalResponse = null;
+
+                        while (currentIndex < totalAppBinaries)
+                        {
+                            var batch = new List<SentinelLibraryAppBinary>();
+                            int batchSize = 0;
+                            bool isFinalBatch = false;
+
+                            while (currentIndex < totalAppBinaries)
+                            {
+                                var appBinary = appBinariesList[currentIndex];
+                                int appBinarySize = appBinary.CalculateSize();
+
+                                if (batchSize + appBinarySize <= maxPBSizeBytes || batch.Count == 0)
+                                {
+                                    batch.Add(appBinary);
+                                    batchSize += appBinarySize;
+                                    currentIndex++;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+
+                            isFinalBatch = currentIndex >= totalAppBinaries;
+
+                            var request = new ReportAppBinariesRequest
+                            {
+                                SnapshotTime = snapshotTime,
+                                CommitSnapshot = isFinalBatch
+                            };
+                            request.AppBinaries.AddRange(batch);
+
+                            _logger.LogInformation($"Sending batch of {batch.Count} AppBinaries, commit={isFinalBatch}");
+                            var response = await client.ReportAppBinariesAsync(request, cancellationToken: ct);
+
+                            if (isFinalBatch)
+                            {
+                                finalResponse = response;
+                            }
+                        }
+
+                        return finalResponse ?? new ReportAppBinariesResponse();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to report app binaries");
+
+                    if (_stateService.IsFirstReport && _systemConfig.ExitOnFirstReportFailure)
+                    {
+                        _logger.LogCritical("First report failed, exiting application...");
+                        Environment.Exit(1);
+                    }
+
+                    return new ReportAppBinariesResponse();
+                }
+                finally
+                {
+                    _stateService.IsFirstReport = false;
+                }
             }
         }
     }

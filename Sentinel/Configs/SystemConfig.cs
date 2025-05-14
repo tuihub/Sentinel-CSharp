@@ -6,7 +6,10 @@
         public string LibrarianRefreshToken { get; set; } = string.Empty;
         public string DbPath { get; set; } = "./sentinel.db";
         public string PluginBaseDir { get; set; } = "./plugins";
-        public IList<LibraryConfig> LibraryConfigs { get; set; } = new List<LibraryConfig>();
+        public long MaxPBMsgSizeBytes { get; set; } = 4194304;
+        public bool ExitOnFirstReportFailure { get; set; } = true;
+        public double HeartbeatIntervalSeconds { get; set; } = 60.0;
+        public IList<LibraryConfig> LibraryConfigs { get; set; } = [];
         public double LibraryScanIntervalMinutes { get; set; } = 1440;
     }
 }

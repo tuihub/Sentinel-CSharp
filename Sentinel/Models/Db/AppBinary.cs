@@ -58,5 +58,9 @@ namespace Sentinel.Models.Db
                 //Publisher = string.Empty,
             };
         }
+        public long CalcPBSizeBytes()
+        {
+            return ToPB(false).CalculateSize();
+        }
     }
 }

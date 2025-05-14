@@ -11,6 +11,10 @@ namespace Sentinel.Services
         private readonly SystemConfig _systemConfig;
         private readonly IHostEnvironment _hostEnvironment;
 
+        public long InstanceId { get; } = new Random().NextInt64();
+        public bool IsLastHeartbeatSucceeded { get; } = false;
+        public bool IsFirstReport { get; set; } = false;
+
         public SystemConfig SystemConfig => _systemConfig;
         public string AccessToken { get; set; } = string.Empty;
         private string _refreshToken = string.Empty;
