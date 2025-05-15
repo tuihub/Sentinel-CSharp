@@ -216,6 +216,13 @@ namespace Sentinel
                 // report sentinel info
                 var librarianClientService = scope.ServiceProvider.GetRequiredService<LibrarianClientService>();
                 librarianClientService.ReportSentinelInformationAsync().Wait();
+
+                // set Heartbeat when not reporting to server
+                if (options.NoReportToServer)
+                {
+                    var stateService = scope.ServiceProvider.GetRequiredService<StateService>();
+                    stateService.IsLastHeartbeatSucceeded = true;
+                }
             }
 
             host.Services.GetRequiredService<IHostApplicationLifetime>().ApplicationStopped.Register(() =>
