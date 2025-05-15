@@ -12,7 +12,7 @@ namespace Sentinel.Services
         private readonly IHostEnvironment _hostEnvironment;
 
         public long InstanceId { get; } = new Random().NextInt64();
-        public bool IsLastHeartbeatSucceeded { get; } = false;
+        public bool IsLastHeartbeatSucceeded { get; set; } = false;
         public bool IsFirstReport { get; set; } = false;
 
         public SystemConfig SystemConfig => _systemConfig;

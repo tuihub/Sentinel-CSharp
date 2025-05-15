@@ -84,7 +84,8 @@ namespace Sentinel.Services
                     .Include(x => x.Files)
                     .ThenInclude(x => x.Chunks)
                     .AsNoTracking()
-                    .Select(x => x.ToPB(_sentinelConfig.NeedToken));
+                    .Select(x => x.ToPB(_sentinelConfig.NeedToken))
+                    .ToList();
                 try
                 {
                     if (_systemConfig.MaxPBMsgSizeBytes < 0)
@@ -102,44 +103,89 @@ namespace Sentinel.Services
                     {
                         var maxPBSizeBytes = (int)(_systemConfig.MaxPBMsgSizeBytes * 0.9); // reserve some space
                         var snapshotTime = Timestamp.FromDateTime(DateTime.UtcNow);
-                        var appBinariesList = sentinelAppBinaries.ToList();
-                        int totalAppBinaries = appBinariesList.Count;
+                        int totalAppBinaries = sentinelAppBinaries.Count;
                         int currentIndex = 0;
+                        int partialAppBinaryFileIndex = 0;
                         ReportAppBinariesResponse? finalResponse = null;
 
                         while (currentIndex < totalAppBinaries)
                         {
-                            var batch = new List<SentinelLibraryAppBinary>();
+                            var batchAppBinaries = new List<SentinelLibraryAppBinary>();
                             int batchSize = 0;
                             bool isFinalBatch = false;
+                            bool partialAppBinaryPending = false;
 
+                            // Process current AppBinary
                             while (currentIndex < totalAppBinaries)
                             {
-                                var appBinary = appBinariesList[currentIndex];
-                                int appBinarySize = appBinary.CalculateSize();
+                                var currentAppBinary = sentinelAppBinaries[currentIndex];
 
-                                if (batchSize + appBinarySize <= maxPBSizeBytes || batch.Count == 0)
+                                if (partialAppBinaryPending)
                                 {
-                                    batch.Add(appBinary);
-                                    batchSize += appBinarySize;
-                                    currentIndex++;
+                                    AddPartialAppBinaryFilesToBatch(ref partialAppBinaryFileIndex, maxPBSizeBytes, batchAppBinaries, ref batchSize, currentAppBinary);
+
+                                    // Check if all files were processed
+                                    if (partialAppBinaryFileIndex >= currentAppBinary.Files.Count)
+                                    {
+                                        partialAppBinaryFileIndex = 0;
+                                        currentIndex++;
+                                        partialAppBinaryPending = false;
+                                        _logger.LogDebug($"Finished processing AppBinary {currentAppBinary.Name}, added all {currentAppBinary.Files.Count} files");
+                                        continue;
+                                    }
+                                    else
+                                    {
+                                        partialAppBinaryPending = true;
+                                        _logger.LogDebug($"Partially processed AppBinary {currentAppBinary.Name}," +
+                                            $" added {partialAppBinaryFileIndex}/{currentAppBinary.Files.Count} files");
+                                        break;
+                                    }
                                 }
                                 else
                                 {
+                                    int fullAppBinarySize = currentAppBinary.CalculateSize();
+
+                                    // Check if we can add the entire AppBinary without exceeding the size limit
+                                    if (batchSize + fullAppBinarySize <= maxPBSizeBytes)
+                                    {
+                                        batchAppBinaries.Add(currentAppBinary);
+                                        batchSize += fullAppBinarySize;
+                                        currentIndex++;
+                                        continue;
+                                    }
+
+                                    // Check if current batch size exceeds 3/4 of the maximum allowed size
+                                    if (batchSize > maxPBSizeBytes * 0.75 && batchAppBinaries.Count > 0)
+                                    {
+                                        // Current batch is large enough, send it first
+                                        break;
+                                    }
+
+                                    AddPartialAppBinaryFilesToBatch(ref partialAppBinaryFileIndex, maxPBSizeBytes, batchAppBinaries, ref batchSize, currentAppBinary);
+
+                                    partialAppBinaryPending = true;
+                                    _logger.LogDebug($"Partially processed AppBinary {currentAppBinary.Name}," +
+                                        $" added {partialAppBinaryFileIndex}/{currentAppBinary.Files.Count} files");
                                     break;
                                 }
                             }
 
                             isFinalBatch = currentIndex >= totalAppBinaries;
 
+                            if (batchAppBinaries.Count == 0)
+                            {
+                                var ab = sentinelAppBinaries[currentIndex];
+                                throw new Exception($"Single AppBinary [{ab.Name}, {ab.SentinelGeneratedId}] exceeds size limit.");
+                            }
+
                             var request = new ReportAppBinariesRequest
                             {
                                 SnapshotTime = snapshotTime,
                                 CommitSnapshot = isFinalBatch
                             };
-                            request.AppBinaries.AddRange(batch);
+                            request.AppBinaries.AddRange(batchAppBinaries);
 
-                            _logger.LogInformation($"Sending batch of {batch.Count} AppBinaries, commit={isFinalBatch}");
+                            _logger.LogInformation($"Sending batch of {batchAppBinaries.Count} AppBinaries with {batchAppBinaries.Sum(ab => ab.Files.Count)} files, commit={isFinalBatch}");
                             var response = await client.ReportAppBinariesAsync(request, cancellationToken: ct);
 
                             if (isFinalBatch)
@@ -161,11 +207,50 @@ namespace Sentinel.Services
                         Environment.Exit(1);
                     }
 
-                    return new ReportAppBinariesResponse();
+                    throw;
                 }
                 finally
                 {
                     _stateService.IsFirstReport = false;
+                }
+            }
+
+            void AddPartialAppBinaryFilesToBatch(ref int partialAppBinaryFileIndex, int maxPBSizeBytes, List<SentinelLibraryAppBinary> batchAppBinaries, 
+                ref int batchSize, SentinelLibraryAppBinary currentAppBinary)
+            {
+                // Create a copy of AppBinary with files
+                var appBinaryClone = currentAppBinary.Clone();
+                appBinaryClone.Files.Clear();
+                batchSize += appBinaryClone.CalculateSize(); // Add base size
+
+                // Add files one by one until size limit is reached
+                var files = currentAppBinary.Files;
+
+                while (partialAppBinaryFileIndex < files.Count)
+                {
+                    var file = files[partialAppBinaryFileIndex];
+                    int fileSize = file.CalculateSize();
+
+                    // Check if adding this file would exceed the size limit
+                    if (batchSize + fileSize <= maxPBSizeBytes)
+                    {
+                        appBinaryClone.Files.Add(file);
+                        batchSize += fileSize;
+                        partialAppBinaryFileIndex++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                if (appBinaryClone.Files.Count > 0 || currentAppBinary.Files.Count == 0)
+                {
+                    batchAppBinaries.Add(appBinaryClone);
+                }
+                else
+                {
+                    batchSize -= appBinaryClone.CalculateSize();
                 }
             }
         }

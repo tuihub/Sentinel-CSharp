@@ -143,6 +143,8 @@ namespace Sentinel
                     o.Address = new Uri(systemConfig.LibrarianUrl);
                 })
                 .AddInterceptor<ClientTokenInterceptor>();
+
+                builder.Services.AddHostedService<HeartBeatWorker>();
             }
             builder.Services.AddSingleton<LibrarianClientService>();
 
@@ -174,6 +176,7 @@ namespace Sentinel
                     p.GetRequiredKeyedService<IPlugin>(config.PluginName),
                     config.PluginConfig,
                     p.GetRequiredService<LibrarianClientService>(),
+                    p.GetRequiredService<StateService>(),
                     TimeSpan.FromMinutes(systemConfig.LibraryScanIntervalMinutes)));
             }
 
