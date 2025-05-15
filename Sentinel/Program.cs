@@ -109,6 +109,14 @@ namespace Sentinel
 
         private static void RunDaemon(DaemonOptions options, string[] args)
         {
+            // Check for duplicate processes in daemon mode
+            if (CheckForDuplicateProcesses())
+            {
+                s_logger.LogCritical($"Sentinel is already running. Exiting.");
+                Thread.Sleep(200);
+                Environment.Exit(1);
+            }
+
             var builder = Host.CreateApplicationBuilder(args);
 
             // get config
@@ -228,6 +236,51 @@ namespace Sentinel
             });
 
             host.Run();
+        }
+
+        private static bool CheckForDuplicateProcesses()
+        {
+            // Get current process path and ID
+            string currentProcessPath = Process.GetCurrentProcess().MainModule?.FileName ?? "";
+            int currentProcessId = Process.GetCurrentProcess().Id;
+
+            // Log current process information
+            s_logger.LogDebug($"Current process ID: {currentProcessId}, Path: {currentProcessPath}");
+
+            // Check if there are other processes with the same path running
+            Process[] processes = Process.GetProcesses();
+            Process? duplicateProcess = null;
+
+            foreach (var process in processes)
+            {
+                try
+                {
+                    if (process.Id != currentProcessId)
+                    {
+                        string processPath = process.MainModule?.FileName ?? "";
+                        if (processPath == currentProcessPath)
+                        {
+                            duplicateProcess = process;
+                            s_logger.LogDebug($"Found duplicate process - ID: {process.Id}, Path: {processPath}");
+                            break;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Ignore errors when unable to access some process information
+                    s_logger.LogTrace($"Unable to access process ID: {process.Id} information: {ex.Message}");
+                    continue;
+                }
+            }
+
+            if (duplicateProcess != null)
+            {
+                s_logger.LogWarning($"An instance of this application is already running. Duplicate process ID: {duplicateProcess.Id}");
+                return true;
+            }
+
+            return false;
         }
     }
 }
