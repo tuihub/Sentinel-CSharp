@@ -5,7 +5,8 @@ using System.Text.Json.Serialization;
 namespace Sentinel.Models.Db
 {
     [Index(nameof(Path))]
-    [Index(nameof(Guid))]
+    // TODO: Guid unique not checked on generation
+    [Index(nameof(Guid), IsUnique = true)]
     public class AppBinary
     {
         [Key]

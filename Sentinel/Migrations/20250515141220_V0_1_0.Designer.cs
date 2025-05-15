@@ -11,14 +11,14 @@ using Sentinel;
 namespace Sentinel.Migrations
 {
     [DbContext(typeof(SentinelDbContext))]
-    [Migration("20250411083258_V0_1_0")]
+    [Migration("20250515141220_V0_1_0")]
     partial class V0_1_0
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.4");
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.5");
 
             modelBuilder.Entity("Sentinel.Models.Db.AppBinary", b =>
                 {
@@ -49,7 +49,8 @@ namespace Sentinel.Migrations
 
                     b.HasIndex("AppBinaryBaseDirId");
 
-                    b.HasIndex("Guid");
+                    b.HasIndex("Guid")
+                        .IsUnique();
 
                     b.HasIndex("Path");
 

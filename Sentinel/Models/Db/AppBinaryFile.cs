@@ -56,9 +56,5 @@ namespace Sentinel.Models.Db
                 ChunksInfo = JsonSerializer.Serialize(Chunks),
             };
         }
-        public long CalcPBSizeBytes()
-        {
-            return ToPB().CalculateSize();
-        }
     }
 }

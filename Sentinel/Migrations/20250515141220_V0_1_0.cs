@@ -101,7 +101,8 @@ namespace Sentinel.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_AppBinaries_Guid",
                 table: "AppBinaries",
-                column: "Guid");
+                column: "Guid",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_AppBinaries_Path",

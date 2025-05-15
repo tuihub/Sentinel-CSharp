@@ -15,7 +15,7 @@ namespace Sentinel.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.4");
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.5");
 
             modelBuilder.Entity("Sentinel.Models.Db.AppBinary", b =>
                 {
@@ -46,7 +46,8 @@ namespace Sentinel.Migrations
 
                     b.HasIndex("AppBinaryBaseDirId");
 
-                    b.HasIndex("Guid");
+                    b.HasIndex("Guid")
+                        .IsUnique();
 
                     b.HasIndex("Path");
 
