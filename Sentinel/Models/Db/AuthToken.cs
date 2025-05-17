@@ -10,4 +10,4 @@ namespace Sentinel.Models.Db
         public string RefreshToken { get; set; } = string.Empty;
         public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
     }
-} 
+}

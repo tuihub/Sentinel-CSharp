@@ -38,7 +38,7 @@ namespace Sentinel.Plugin.Helpers
             return false;
         }
 
-        public static async Task<AppBinary> GetAppBinaryAsync(ILogger? logger, IEnumerable<string> fsFiles, string libraryFolder, 
+        public static async Task<AppBinary> GetAppBinaryAsync(ILogger? logger, IEnumerable<string> fsFiles, string libraryFolder,
             long chunkSizeBytes, string appBinaryRelativePath, CancellationToken ct = default)
         {
             var fileEntries = new List<FileEntry>(fsFiles.Count());

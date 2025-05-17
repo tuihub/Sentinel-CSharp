@@ -25,11 +25,11 @@ namespace Sentinel.Workers
         private DateTime _lastScanTime = DateTime.MinValue;
 
         public ScheduledFSScanWorker(
-            ILogger<ScheduledFSScanWorker> logger, 
-            IServiceScopeFactory serviceScopeFactory, 
+            ILogger<ScheduledFSScanWorker> logger,
+            IServiceScopeFactory serviceScopeFactory,
             IPlugin plugin,
-            IConfigurationSection pluginConfigSection, 
-            LibrarianClientService librarianClientService, 
+            IConfigurationSection pluginConfigSection,
+            LibrarianClientService librarianClientService,
             StateService stateService,
             TimeSpan scanInterval)
         {
@@ -57,7 +57,7 @@ namespace Sentinel.Workers
             {
                 // Start a separate task to process the report queue
                 _ = ProcessReportTaskAsync(stoppingToken);
-                
+
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     using (var scope = _serviceScopeFactory.CreateScope())
@@ -108,7 +108,7 @@ namespace Sentinel.Workers
                     {
                         hasPending = _hasPendingReport;
                     }
-                    
+
                     // Check if there is a pending report
                     if (hasPending)
                     {
@@ -122,15 +122,15 @@ namespace Sentinel.Workers
                                 {
                                     DateTime reportTime = _lastScanTime;
                                     _logger.LogInformation($"[{_plugin.Name}, {_plugin.Config.LibraryName}] Starting report for scan at: {reportTime}");
-                                    
+
                                     await _librarianClientService.ReportAppBinariesAsync(stoppingToken);
-                                    
+
                                     // Clear the pending flag after successful reporting
                                     lock (this)
                                     {
                                         _hasPendingReport = false;
                                     }
-                                    
+
                                     _logger.LogInformation($"[{_plugin.Name}, {_plugin.Config.LibraryName}] Successfully completed report for scan at: {reportTime}");
                                 }
                                 catch (Exception ex)

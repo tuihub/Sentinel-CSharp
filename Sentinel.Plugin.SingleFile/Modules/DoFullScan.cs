@@ -56,7 +56,7 @@ namespace Sentinel.Plugin.SingleFile
                         var fullPath = Path.Combine(Config.LibraryFolder, appBinary.Files.Single().Path);
                         if (Config.ForceCalcDigest || FileEntryHelper.GetLastWriteTimeUtcSec(fullPath) != appBinary.Files.Single().LastWriteUtc)
                         {
-                            _logger?.LogDebug("DoFullScanAsync: old LastWriteUtc: " + appBinary.Files.Single().LastWriteUtc.ToString("O") + 
+                            _logger?.LogDebug("DoFullScanAsync: old LastWriteUtc: " + appBinary.Files.Single().LastWriteUtc.ToString("O") +
                                 ", current LastWriteUtc: " + FileEntryHelper.GetLastWriteTimeUtcSec(fullPath).ToString("O"));
                             _logger?.LogInformation("DoFullScanAsync: Rechecking " + fullPath);
                             var fileEntry = await FileEntryHelper.GetFileEntryAsync(_logger, fullPath, Config.LibraryFolder, Config.ChunkSizeBytes, ct: ct);
