@@ -11,7 +11,7 @@ using Sentinel;
 namespace Sentinel.Migrations
 {
     [DbContext(typeof(SentinelDbContext))]
-    [Migration("20250515141220_V0_1_0")]
+    [Migration("20250517110543_V0_1_0")]
     partial class V0_1_0
     {
         /// <inheritdoc />
@@ -142,6 +142,28 @@ namespace Sentinel.Migrations
                     b.HasIndex("AppBinaryFileId");
 
                     b.ToTable("AppBinaryFileChunks");
+                });
+
+            modelBuilder.Entity("Sentinel.Models.Db.AuthToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AccessToken")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AuthTokens");
                 });
 
             modelBuilder.Entity("Sentinel.Models.Db.AppBinary", b =>

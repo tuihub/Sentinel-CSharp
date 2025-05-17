@@ -141,6 +141,28 @@ namespace Sentinel.Migrations
                     b.ToTable("AppBinaryFileChunks");
                 });
 
+            modelBuilder.Entity("Sentinel.Models.Db.AuthToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AccessToken")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AuthTokens");
+                });
+
             modelBuilder.Entity("Sentinel.Models.Db.AppBinary", b =>
                 {
                     b.HasOne("Sentinel.Models.Db.AppBinaryBaseDir", "AppBinaryBaseDir")

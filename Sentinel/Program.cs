@@ -103,6 +103,7 @@ namespace Sentinel
             catch (Exception ex)
             {
                 s_logger.LogError(ex, $"Error running plugin {plugin.Name}");
+                Thread.Sleep(200);
                 Environment.Exit(1);
             }
         }
@@ -129,6 +130,7 @@ namespace Sentinel
 
             // add db context
             builder.Services.AddDbContext<SentinelDbContext>(o => o.UseSqlite($"Data Source={systemConfig.DbPath}"));
+            builder.Services.AddDbContextFactory<SentinelDbContext>(o => o.UseSqlite($"Data Source={systemConfig.DbPath}"));
 
             // add state service
             builder.Services.AddSingleton<StateService>();
@@ -212,6 +214,28 @@ namespace Sentinel
                     }
                 }
                 dbContext.SaveChanges();
+
+                // Process refresh token specified from command line
+                if (!string.IsNullOrEmpty(options.RefreshToken))
+                {
+                    s_logger.LogInformation("Using refresh token specified from command line");
+                    var stateService = scope.ServiceProvider.GetRequiredService<StateService>();
+                    stateService.RefreshToken = options.RefreshToken;
+                    
+                    // Exit if update-token-only is specified
+                    if (options.UpdateTokenOnly)
+                    {
+                        s_logger.LogInformation("RefreshToken updated in database. Exiting as requested.");
+                        Thread.Sleep(200);
+                        Environment.Exit(0);
+                    }
+                }
+                else if (options.UpdateTokenOnly)
+                {
+                    s_logger.LogWarning("UpdateTokenOnly option specified but no RefreshToken provided. Exiting without updates.");
+                    Thread.Sleep(200);
+                    Environment.Exit(1);
+                }
 
                 // report sentinel info
                 var librarianClientService = scope.ServiceProvider.GetRequiredService<LibrarianClientService>();

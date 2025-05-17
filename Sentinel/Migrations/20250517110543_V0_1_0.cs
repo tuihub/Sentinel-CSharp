@@ -26,6 +26,21 @@ namespace Sentinel.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AuthTokens",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    AccessToken = table.Column<string>(type: "TEXT", nullable: false),
+                    RefreshToken = table.Column<string>(type: "TEXT", nullable: false),
+                    LastUpdated = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AuthTokens", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AppBinaries",
                 columns: table => new
                 {
@@ -141,6 +156,9 @@ namespace Sentinel.Migrations
         {
             migrationBuilder.DropTable(
                 name: "AppBinaryFileChunks");
+
+            migrationBuilder.DropTable(
+                name: "AuthTokens");
 
             migrationBuilder.DropTable(
                 name: "AppBinaryFiles");

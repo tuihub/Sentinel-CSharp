@@ -204,6 +204,7 @@ namespace Sentinel.Services
                     if (_stateService.IsFirstReport && _systemConfig.ExitOnFirstReportFailure)
                     {
                         _logger.LogCritical("First report failed, exiting application...");
+                        Thread.Sleep(200);
                         Environment.Exit(1);
                     }
 
@@ -215,7 +216,7 @@ namespace Sentinel.Services
                 }
             }
 
-            void AddPartialAppBinaryFilesToBatch(ref int partialAppBinaryFileIndex, int maxPBSizeBytes, List<SentinelLibraryAppBinary> batchAppBinaries, 
+            void AddPartialAppBinaryFilesToBatch(ref int partialAppBinaryFileIndex, int maxPBSizeBytes, List<SentinelLibraryAppBinary> batchAppBinaries,
                 ref int batchSize, SentinelLibraryAppBinary currentAppBinary)
             {
                 // Create a copy of AppBinary with files
