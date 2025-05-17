@@ -130,7 +130,6 @@ namespace Sentinel
 
             // add db context
             builder.Services.AddDbContext<SentinelDbContext>(o => o.UseSqlite($"Data Source={systemConfig.DbPath}"));
-            builder.Services.AddDbContextFactory<SentinelDbContext>(o => o.UseSqlite($"Data Source={systemConfig.DbPath}"));
 
             // add state service
             builder.Services.AddSingleton<StateService>();
@@ -221,7 +220,7 @@ namespace Sentinel
                     s_logger.LogInformation("Using refresh token specified from command line");
                     var stateService = scope.ServiceProvider.GetRequiredService<StateService>();
                     stateService.RefreshToken = options.RefreshToken;
-                    
+
                     // Exit if update-token-only is specified
                     if (options.UpdateTokenOnly)
                     {

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sentinel.Configs;
 using Sentinel.Models.Db;
@@ -9,7 +9,7 @@ namespace Sentinel.Services
     {
         private readonly ILogger<StateService> _logger;
         private readonly SystemConfig _systemConfig;
-        private readonly IDbContextFactory<SentinelDbContext> _dbContextFactory;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
 
         public long InstanceId { get; } = new Random().NextInt64();
         public bool IsLastHeartbeatSucceeded { get; set; } = false;
@@ -45,11 +45,11 @@ namespace Sentinel.Services
             }
         }
 
-        public StateService(ILogger<StateService> logger, SystemConfig systemConfig, IDbContextFactory<SentinelDbContext> dbContextFactory)
+        public StateService(ILogger<StateService> logger, SystemConfig systemConfig, IServiceScopeFactory serviceScopeFactory)
         {
             _logger = logger;
             _systemConfig = systemConfig;
-            _dbContextFactory = dbContextFactory;
+            _serviceScopeFactory = serviceScopeFactory;
 
             // Load tokens from database
             LoadTokensFromDb();
@@ -65,8 +65,10 @@ namespace Sentinel.Services
         {
             try
             {
-                using var dbContext = _dbContextFactory.CreateDbContext();
-                var token = dbContext.AuthTokens.FirstOrDefault();
+                using var scope = _serviceScopeFactory.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<SentinelDbContext>();
+
+                var token = dbContext.AuthTokens.OrderBy(x => x.Id).FirstOrDefault();
                 if (token != null)
                 {
                     AccessToken = token.AccessToken;
@@ -84,9 +86,10 @@ namespace Sentinel.Services
         {
             try
             {
-                using var dbContext = _dbContextFactory.CreateDbContext();
-                
-                var existingToken = dbContext.AuthTokens.FirstOrDefault();
+                using var scope = _serviceScopeFactory.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<SentinelDbContext>();
+
+                var existingToken = dbContext.AuthTokens.OrderBy(x => x.Id).FirstOrDefault();
                 if (existingToken != null)
                 {
                     existingToken.AccessToken = accessToken;
