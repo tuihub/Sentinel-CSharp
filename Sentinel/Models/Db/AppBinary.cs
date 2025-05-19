@@ -47,7 +47,7 @@ namespace Sentinel.Models.Db
         {
             return new TuiHub.Protos.Librarian.Sephirah.V1.Sentinel.SentinelLibraryAppBinary
             {
-                SentinelLibraryId = Id,
+                SentinelLibraryId = AppBinaryBaseDirId,
                 SentinelGeneratedId = Guid.ToString(),
                 SizeBytes = SizeBytes,
                 NeedToken = needToken,
