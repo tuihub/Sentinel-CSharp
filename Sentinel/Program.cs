@@ -237,8 +237,17 @@ namespace Sentinel
                 }
 
                 // report sentinel info
-                var librarianClientService = scope.ServiceProvider.GetRequiredService<LibrarianClientService>();
-                librarianClientService.ReportSentinelInformationAsync().Wait();
+                try
+                {
+                    var librarianClientService = scope.ServiceProvider.GetRequiredService<LibrarianClientService>();
+                    librarianClientService.ReportSentinelInformationAsync().Wait();
+                }
+                catch
+                {
+                    s_logger.LogError("Failed to report sentinel information to server. Exiting.");
+                    Thread.Sleep(200);
+                    Environment.Exit(1);
+                }
 
                 // set Heartbeat when not reporting to server
                 if (options.NoReportToServer)
