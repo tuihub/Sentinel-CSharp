@@ -20,7 +20,7 @@ namespace Sentinel
     class Program
     {
         private static ILogger s_logger = null!;
-        private static ServiceCollection s_pluginServices = new ServiceCollection();
+        private static ServiceCollection s_pluginServices = new();
 
         static void Main(string[] args)
         {
@@ -281,7 +281,7 @@ namespace Sentinel
         {
             // Get current process path and ID
             string currentProcessPath = Process.GetCurrentProcess().MainModule?.FileName ?? "";
-            int currentProcessId = Process.GetCurrentProcess().Id;
+            int currentProcessId = Environment.ProcessId;
 
             // Log current process information
             s_logger.LogDebug($"Current process ID: {currentProcessId}, Path: {currentProcessPath}");

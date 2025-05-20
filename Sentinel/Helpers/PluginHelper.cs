@@ -78,8 +78,7 @@ namespace Sentinel.Helpers
 
         private static Assembly LoadPlugin(ILogger? logger, string path)
         {
-            string? curAssemblyPath = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
-            string pluginLocation = Path.GetFullPath(Path.Combine(curAssemblyPath ?? string.Empty, path));
+            string pluginLocation = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, path));
             logger?.LogDebug($"Loading IPlugins from: {pluginLocation}");
             var loadContext = new PluginLoadContext(pluginLocation);
             return loadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(pluginLocation)));

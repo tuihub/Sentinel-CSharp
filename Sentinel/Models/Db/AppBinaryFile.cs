@@ -44,7 +44,7 @@ namespace Sentinel.Models.Db
         {
             return new Plugin.Models.FileEntry(Path, SizeBytes, Sha256, Chunks.Select(x => x.ToPluginModel()), LastWriteUtc);
         }
-        public TuiHub.Protos.Librarian.Sephirah.V1.Sentinel.SentinelLibraryAppBinaryFile ToPB()
+        public TuiHub.Protos.Librarian.Sephirah.V1.Sentinel.SentinelLibraryAppBinaryFile ToPb()
         {
             return new TuiHub.Protos.Librarian.Sephirah.V1.Sentinel.SentinelLibraryAppBinaryFile
             {

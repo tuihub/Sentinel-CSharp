@@ -10,23 +10,14 @@ using static TuiHub.Protos.Librarian.Sephirah.V1.Sentinel.LibrarianSentinelServi
 
 namespace Sentinel.Services
 {
-    public class LibrarianClientService
+    public class LibrarianClientService(ILogger<LibrarianClientService> logger, SystemConfig systemConfig, SentinelConfig sentinelConfig,
+        StateService stateService, IServiceScopeFactory serviceScopeFactory)
     {
-        private readonly ILogger<LibrarianClientService> _logger;
-        private readonly SystemConfig _systemConfig;
-        private readonly SentinelConfig _sentinelConfig;
-        private readonly StateService _stateService;
-        private readonly IServiceScopeFactory _serviceScopeFactory;
-
-        public LibrarianClientService(ILogger<LibrarianClientService> logger, SystemConfig systemConfig, SentinelConfig sentinelConfig,
-            StateService stateService, IServiceScopeFactory serviceScopeFactory)
-        {
-            _logger = logger;
-            _systemConfig = systemConfig;
-            _sentinelConfig = sentinelConfig;
-            _stateService = stateService;
-            _serviceScopeFactory = serviceScopeFactory;
-        }
+        private readonly ILogger<LibrarianClientService> _logger = logger;
+        private readonly SystemConfig _systemConfig = systemConfig;
+        private readonly SentinelConfig _sentinelConfig = sentinelConfig;
+        private readonly StateService _stateService = stateService;
+        private readonly IServiceScopeFactory _serviceScopeFactory = serviceScopeFactory;
 
         public async Task<HeartbeatResponse> HeartbeatAsync(CancellationToken ct = default)
         {
@@ -84,11 +75,11 @@ namespace Sentinel.Services
                     .Include(x => x.Files)
                     .ThenInclude(x => x.Chunks)
                     .AsNoTracking()
-                    .Select(x => x.ToPB(_sentinelConfig.NeedToken))
+                    .Select(x => x.ToPb(_sentinelConfig.NeedToken))
                     .ToList();
                 try
                 {
-                    if (_systemConfig.MaxPBMsgSizeBytes < 0)
+                    if (_systemConfig.MaxPbMsgSizeBytes < 0)
                     {
                         var request = new ReportAppBinariesRequest()
                         {
@@ -101,7 +92,7 @@ namespace Sentinel.Services
                     // split into multiple messages if the size exceeds the limit
                     else
                     {
-                        var maxPBSizeBytes = (int)(_systemConfig.MaxPBMsgSizeBytes * 0.9); // reserve some space
+                        var maxPbSizeBytes = (int)(_systemConfig.MaxPbMsgSizeBytes * 0.9); // reserve some space
                         var snapshotTime = Timestamp.FromDateTime(DateTime.UtcNow);
                         int totalAppBinaries = sentinelAppBinaries.Count;
                         int currentIndex = 0;
@@ -122,7 +113,7 @@ namespace Sentinel.Services
 
                                 if (partialAppBinaryPending)
                                 {
-                                    AddPartialAppBinaryFilesToBatch(ref partialAppBinaryFileIndex, maxPBSizeBytes, batchAppBinaries, ref batchSize, currentAppBinary);
+                                    AddPartialAppBinaryFilesToBatch(ref partialAppBinaryFileIndex, maxPbSizeBytes, batchAppBinaries, ref batchSize, currentAppBinary);
 
                                     // Check if all files were processed
                                     if (partialAppBinaryFileIndex >= currentAppBinary.Files.Count)
@@ -146,7 +137,7 @@ namespace Sentinel.Services
                                     int fullAppBinarySize = currentAppBinary.CalculateSize();
 
                                     // Check if we can add the entire AppBinary without exceeding the size limit
-                                    if (batchSize + fullAppBinarySize <= maxPBSizeBytes)
+                                    if (batchSize + fullAppBinarySize <= maxPbSizeBytes)
                                     {
                                         batchAppBinaries.Add(currentAppBinary);
                                         batchSize += fullAppBinarySize;
@@ -155,13 +146,13 @@ namespace Sentinel.Services
                                     }
 
                                     // Check if current batch size exceeds 3/4 of the maximum allowed size
-                                    if (batchSize > maxPBSizeBytes * 0.75 && batchAppBinaries.Count > 0)
+                                    if (batchSize > maxPbSizeBytes * 0.75 && batchAppBinaries.Count > 0)
                                     {
                                         // Current batch is large enough, send it first
                                         break;
                                     }
 
-                                    AddPartialAppBinaryFilesToBatch(ref partialAppBinaryFileIndex, maxPBSizeBytes, batchAppBinaries, ref batchSize, currentAppBinary);
+                                    AddPartialAppBinaryFilesToBatch(ref partialAppBinaryFileIndex, maxPbSizeBytes, batchAppBinaries, ref batchSize, currentAppBinary);
 
                                     partialAppBinaryPending = true;
                                     _logger.LogDebug($"Partially processed AppBinary {currentAppBinary.Name}," +
@@ -216,7 +207,7 @@ namespace Sentinel.Services
                 }
             }
 
-            void AddPartialAppBinaryFilesToBatch(ref int partialAppBinaryFileIndex, int maxPBSizeBytes, List<SentinelLibraryAppBinary> batchAppBinaries,
+            void AddPartialAppBinaryFilesToBatch(ref int partialAppBinaryFileIndex, int maxPbSizeBytes, List<SentinelLibraryAppBinary> batchAppBinaries,
                 ref int batchSize, SentinelLibraryAppBinary currentAppBinary)
             {
                 // Create a copy of AppBinary with files
@@ -233,7 +224,7 @@ namespace Sentinel.Services
                     int fileSize = file.CalculateSize();
 
                     // Check if adding this file would exceed the size limit
-                    if (batchSize + fileSize <= maxPBSizeBytes)
+                    if (batchSize + fileSize <= maxPbSizeBytes)
                     {
                         appBinaryClone.Files.Add(file);
                         batchSize += fileSize;
