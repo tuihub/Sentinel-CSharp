@@ -60,6 +60,7 @@ namespace Sentinel.Helpers
                     {
                         if (Activator.CreateInstance(type) is IPlugin plugin)
                         {
+                            services.AddTransient(typeof(IPlugin), type);
                             services.AddKeyedTransient(typeof(IPlugin), plugin.Name, type);
                             logger?.LogInformation($"Loaded IPlugin {plugin.Name} ({type}) from {assembly.FullName}");
                         }
